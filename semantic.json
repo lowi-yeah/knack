@@ -1,0 +1,30 @@
+{
+  "base": "src/lib/semantic",
+  "paths": {
+    "source": {
+      "config": "src/theme.config",
+      "definitions": "src/definitions/",
+      "site": "src/site/",
+      "themes": "src/themes/"
+    },
+    "output": {
+      "packaged": "../../../dist/semantic",
+      "uncompressed": "../../../.tmp/semantic/components/",
+      "compressed": "../../../.tmp/semantic/components/",
+      "themes": "../../../dist/semantic/themes/"
+    },
+    "clean": "dist/"
+  },
+  "permission": false,
+  "autoInstall": true,
+  "rtl": false,
+  "components": [
+    "reset",
+    "site",
+    "button",
+    "container",
+    "icon",
+    "segment"
+  ],
+  "version": "2.2.11"
+}

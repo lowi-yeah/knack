@@ -1,16 +1,27 @@
-import gulp from "gulp";
-import cp from "child_process";
-import gutil from "gulp-util";
-import postcss from "gulp-postcss";
-import cssImport from "postcss-import";
-import cssnext from "postcss-cssnext";
-import BrowserSync from "browser-sync";
-import webpack from "webpack";
-import webpackConfig from "./webpack.conf";
+import gulp from "gulp"
+import cp from "child_process"
+import gutil from "gulp-util"
+import postcss from "gulp-postcss"
+import cssnext from "postcss-cssnext"
+import BrowserSync from "browser-sync"
+import webpack from "webpack"
+import webpackConfig from "./webpack.conf"
+// import runSequence from 'runSequence'
+
+// import semanticWatch  from './src/lib/semantic/tasks/watch'
+import semanticBuild  from './src/lib/semantic/tasks/build'
+import semanticJS     from './src/lib/semantic/tasks/build/javascript'
+import semanticCSS    from './src/lib/semantic/tasks/build/css'
+import semanticAssets from './src/lib/semantic/tasks/build/assets'
 
 const browserSync = BrowserSync.create();
-const hugoBin = "hugo";
+const hugoBin     = "hugo";
 const defaultArgs = ["-d", "../dist", "-s", "site", "-v"];
+
+gulp.task('semantic-ui', semanticBuild);
+gulp.task('semantic-js', semanticJS);
+gulp.task('semantic-css', semanticCSS);
+gulp.task('semantic-assets', semanticAssets);
 
 gulp.task("hugo", (cb) => buildSite(cb));
 gulp.task("hugo-preview", (cb) => buildSite(cb, ["--buildDrafts", "--buildFuture"]));
@@ -18,36 +29,33 @@ gulp.task("hugo-preview", (cb) => buildSite(cb, ["--buildDrafts", "--buildFuture
 gulp.task("build", ["css", "js", "hugo"]);
 gulp.task("build-preview", ["css", "js", "hugo-preview"]);
 
-gulp.task("css", () => (
-  gulp.src("./src/css/*.css")
-    .pipe(postcss([cssImport({from: "./src/css/main.css"}), cssnext()]))
-    .pipe(gulp.dest("./dist/css"))
-    .pipe(browserSync.stream())
-));
 
-gulp.task("js", (cb) => {
-  const myConfig = Object.assign({}, webpackConfig);
-
+gulp.task('webpack', (cb) => {
+  const myConfig = Object.assign({}, webpackConfig)
   webpack(myConfig, (err, stats) => {
-    if (err) throw new gutil.PluginError("webpack", err);
-    gutil.log("[webpack]", stats.toString({
-      colors: true,
-      progress: true
-    }));
-    browserSync.reload();
-    cb();
-  });
-});
+    if (err) throw new gutil.PluginError('webpack', err)
+    gutil.log('[webpack]', stats.toString({ colors: true, progress: true }))
+    browserSync.reload()
+    cb() })})
 
-gulp.task("server", ["hugo", "css", "js"], () => {
+
+gulp.task('server', ['hugo', 'semantic-ui', 'webpack'], () => {
   browserSync.init({
     server: {
-      baseDir: "./dist"
+      baseDir: './dist'
     }
-  });
-  gulp.watch("./src/js/**/*.js", ["js"]);
-  gulp.watch("./src/css/**/*.css", ["css"]);
-  gulp.watch("./site/**/*", ["hugo"]);
+  })
+
+  gulp.watch('./src/js/**/*.js', ['webpack'])
+  
+  gulp.watch(['./src/less/**/*.{less,overrides,variables,config}'], ['webpack'])
+
+  gulp.watch('./src/lib/semantic/src/**/*.{less,overrides,variables,config}', ['semantic-css'])
+  gulp.watch('./src/lib/semantic/src/**/*.js', ['semantic-js'])
+  gulp.watch('semantic-json', ['semantic-js', 'semantic-css'])
+
+  
+  gulp.watch('./site/**/*', ['hugo'])
 });
 
 function buildSite(cb, options) {

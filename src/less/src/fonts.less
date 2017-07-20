@@ -1,0 +1,34 @@
+
+// internal variables
+@text-font-escaped: escape(@text-font);
+@display-font-escaped: escape(@display-font);
+@material-icon-font-escaped: escape(@material-icon-font);
+
+@import url('https://fonts.googleapis.com/css?family=@{text-font-escaped}:300,400');
+@import url('https://fonts.googleapis.com/css?family=@{display-font-escaped}');
+@import url('https://fonts.googleapis.com/css?family=@{material-icon-font-escaped}');
+
+
+// .font-face(Ubuntu-Italic, 'https://dl.dropbox.com/u/1220078/ubuntu-new/Ubuntu-Regular-Italic-webfont', 400, italic);
+// .font-face(Ubuntu-Bold, 'https://dl.dropbox.com/u/1220078/ubuntu-new/Ubuntu-Bold-webfont', 700, normal);
+
+//             _
+//  ____  _ __| |_ ___ _ __
+// (_-< || (_-<  _/ -_) '  \
+// /__/\_, /__/\__\___|_|_|_|
+//     |__/
+// Define the "system" font family
+@font-face {
+  font-family: 'System Font';
+  font-style: normal;
+  font-weight: 300;
+  src: local(".SFNSText-Light"), local(".HelveticaNeueDeskInterface-Light"), local(".LucidaGrandeUI"), local("Ubuntu Light"), local("Segoe UI Light"), local("Roboto-Light"), local("DroidSans"), local("Tahoma");
+}
+
+body {
+  font-family: @text-font-family;  
+}
+
+h1, h2, h3 {
+ font-family: @display-font-family;   
+}
