@@ -9,10 +9,10 @@ import webpackConfig from "./webpack.conf"
 // import runSequence from 'runSequence'
 
 // import semanticWatch  from './src/lib/semantic/tasks/watch'
-import semanticBuild  from './src/lib/semantic/tasks/build'
-import semanticJS     from './src/lib/semantic/tasks/build/javascript'
-import semanticCSS    from './src/lib/semantic/tasks/build/css'
-import semanticAssets from './src/lib/semantic/tasks/build/assets'
+import semanticBuild  from './semantic/tasks/build'
+import semanticJS     from './semantic/tasks/build/javascript'
+import semanticCSS    from './semantic/tasks/build/css'
+import semanticAssets from './semantic/tasks/build/assets'
 
 const browserSync = BrowserSync.create();
 const hugoBin     = "hugo";

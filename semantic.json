@@ -2,16 +2,16 @@
   "base": "semantic",
   "paths": {
     "source": {
-      "config": "src/theme.config",
+      "config": "../src/less/theme.config",
       "definitions": "src/definitions/",
       "site": "src/site/",
       "themes": "src/themes/"
     },
     "output": {
       "packaged": "../dist/semantic",
-      "uncompressed": "../.tmp/semantic/components/",
-      "compressed": "../.tmp/semantic/components/",
-      "themes": "../dist/semantic/themes/"
+      "themes": "../dist/semantic/themes/",
+      "uncompressed": "../dist/semantic/components/",
+      "compressed": "../dist/semantic/components/"
     },
     "clean": "dist/"
   },
