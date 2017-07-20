@@ -1,5 +1,5 @@
 {
-  "base": "src/lib/semantic",
+  "base": "semantic",
   "paths": {
     "source": {
       "config": "src/theme.config",
@@ -8,10 +8,10 @@
       "themes": "src/themes/"
     },
     "output": {
-      "packaged": "../../../dist/semantic",
-      "uncompressed": "../../../.tmp/semantic/components/",
-      "compressed": "../../../.tmp/semantic/components/",
-      "themes": "../../../dist/semantic/themes/"
+      "packaged": "../dist/semantic",
+      "uncompressed": "../.tmp/semantic/components/",
+      "compressed": "../.tmp/semantic/components/",
+      "themes": "../dist/semantic/themes/"
     },
     "clean": "dist/"
   },
