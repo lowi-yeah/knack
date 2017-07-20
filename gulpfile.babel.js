@@ -26,8 +26,8 @@ gulp.task('semantic-assets', semanticAssets);
 gulp.task("hugo", (cb) => buildSite(cb));
 gulp.task("hugo-preview", (cb) => buildSite(cb, ["--buildDrafts", "--buildFuture"]));
 
-gulp.task("build", ["css", "js", "hugo"]);
-gulp.task("build-preview", ["css", "js", "hugo-preview"]);
+gulp.task("build", ['semantic-ui', 'webpack', 'hugo']);
+gulp.task("build-preview", ['semantic-ui', 'webpack', 'hugo-preview']);
 
 
 gulp.task('webpack', (cb) => {
