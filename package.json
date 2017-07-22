@@ -5,10 +5,11 @@
   "main": "index.js",
   "scripts": {
     "hugo": "gulp hugo",
-    "build": "gulp build",
+    "build": "npm run clean-semantic-ui; gulp build",
     "build-preview": "gulp build-preview",
     "start": "gulp server",
-    "lint": "eslint src"
+    "lint": "eslint src",
+    "clean-semantic-ui": "rm -rf semantic; gulp --gulpfile node_modules/semantic-ui/gulpfile.js install"
   },
   "author": "",
   "license": "MIT",
