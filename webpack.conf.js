@@ -17,9 +17,9 @@ export default {
         exclude: /node_modules/,
         query: {cacheDirectory: true} },
 
-      { test: require.resolve('jquery'),
-        use:  { loader: 'expose-loader',
-                options: '$' } },
+      // { test: require.resolve('jquery'),
+      //   use:  { loader: 'expose-loader',
+      //           options: '$' } },
 
       // { test: require.resolve('lodash'),
       //   use:  { loader: 'expose-loader',
@@ -42,8 +42,8 @@ export default {
         })},
 
       // images
-      { test: /\.(jpe?g|png|gif|svg)(\?v=\d+\.\d+\.\d+)?$/i, 
-        loader: "file-loader?name=/[hash].[ext]"},
+      { test: /\.(jpe?g|png|gif|svg)$/i, 
+        loader: "file-loader?name=images/[name].[ext]"},
      
       // Fonts
       // { test: /\.svg(\?v=\d+\.\d+\.\d+)?$/,     loader: 'url-loader?limit=65000&mimetype=image/svg+xml&name=assets/fonts/[name].[ext]' },
@@ -61,21 +61,19 @@ export default {
       "fetch": "imports-loader?this=>global!exports?global.fetch!whatwg-fetch"
     }),
     new webpack.ProvidePlugin({
-      $               :'jquery',
-      jQuery          :'jquery',
-      'window.jQuery' :'jquery',
+      // $               :'jquery',
+      // jQuery          :'jquery',
+      // 'window.jQuery' :'jquery',
       _               :'lodash'
     })
   ],
 
   context: path.join(__dirname, "src"),
   entry: {
-    app: ["./js/app",
-          "./less/main.less"
-          ]
+    app: ['./js/app', './less/main.less']
   },
   output: {
-    path: path.join(__dirname, "dist"),
+    path: path.join(__dirname, 'dist'),
     publicPath: "/",
     filename: "[name].js"
   },
