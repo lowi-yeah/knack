@@ -78,5 +78,7 @@
     "webpack": "^2.6.0",
     "whatwg-fetch": "^1.0.0",
     "xtend": "^4.0.1"
+  },
+  "devDependencies": {
   }
 }

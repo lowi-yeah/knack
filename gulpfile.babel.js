@@ -6,7 +6,6 @@ import cssnext from "postcss-cssnext"
 import BrowserSync from "browser-sync"
 import webpack from "webpack"
 import webpackConfig from "./webpack.conf"
-// import runSequence from 'runSequence'
 
 // import semanticWatch  from './src/lib/semantic/tasks/watch'
 import semanticBuild  from './semantic/tasks/build'
@@ -37,7 +36,6 @@ gulp.task('webpack', (cb) => {
     gutil.log('[webpack]', stats.toString({ colors: true, progress: true }))
     browserSync.reload()
     cb() })})
-
 
 gulp.task('server', ['hugo', 'semantic-ui', 'webpack'], () => {
   browserSync.init({

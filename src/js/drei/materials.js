@@ -1,5 +1,7 @@
 import {MeshBasicMaterial,
+        MeshLambertMaterial,
         MeshStandardMaterial, 
+        MeshToonMaterial,
         ShaderMaterial,
         UniformsUtils,
         Vector2 }           from 'three'
@@ -9,7 +11,9 @@ import noiseShader          from '../shader/noise'
 import displacementShader   from '../shader/displacement'
 import ShaderExtras         from '../lib/shader-extras'
 
-let normalmapΣ = ShaderExtras[ 'normalmap' ]
+let normalmapΣ = ShaderExtras.normalmap,
+    screenΣ    = ShaderExtras.screen,
+    basicΣ     = ShaderExtras.basic
 
 function _terrain(shader) {
   let vertexShader    = document.getElementById( 'vertexshader' ).textContent,
@@ -44,7 +48,7 @@ function _displacement(maps, textures) {
                               lights:         false,
                               fog:            false })}
 
-function _normalmap(maps) {
+function _normal(maps) {
   let vertexShader    = normalmapΣ.vertexShader,
       fragmentShader  = normalmapΣ.fragmentShader,
       uniforms        = UniformsUtils.clone(normalmapΣ.uniforms)
@@ -59,12 +63,19 @@ function _normalmap(maps) {
                               lights:         false,
                               fog:            false })}
 
-  // { name:     'normal',
-  //   vertex:   normalShader.vertexShader,
-  //   fragment: normalShader.fragmentShader,
-  //   uniforms: uniforms.normal,
-  //   fog:      false,
-  //   lights:   false},
+function _noise(textures) {
+  let vertexShader    = screenΣ.vertexShader,
+      fragmentShader  = screenΣ.fragmentShader,
+      uniforms        = UniformsUtils.clone(screenΣ.uniforms)
+
+      uniforms.tDiffuse = textures.noise
+      uniforms.opacity  = 1
+
+    return new ShaderMaterial({ uniforms:       uniforms,
+                                vertexShader:   vertexShader,
+                                fragmentShader: fragmentShader,
+                                lights:         false,
+                                fog:            false })}
 
 function _noiseheight() {
   let vertexShader    = document.getElementById( 'vertexshader' ).textContent,
@@ -72,6 +83,8 @@ function _noiseheight() {
       uniforms        = { time:   { value: 1.0 },
                           scale:  { value: new Vector2( 1.5, 1.5 ) },
                           offset: { value: new Vector2( 0, 0 ) }}
+  
+  uniforms.time.value = _.random(100000) // random seed
 
   return new ShaderMaterial({ uniforms:       uniforms,
                               vertexShader:   vertexShader,
@@ -82,29 +95,17 @@ function _noiseheight() {
 function _imageHeight(maps, textures) {
   return new MeshBasicMaterial({ map: textures.alps })}
 
+function _terrain() {
+  return new MeshBasicMaterial({ color: 0xACECC1 })}
+
 // basic
-function materials( dimensions, maps, textures, uniforms) {
-  let terrain = _terrain()
-
-  let params    = [ 
-                    { name:     'terrain',
-                      vertex:   terrain.fragmentShader,
-                      fragment: terrain.vertexShader,
-                      uniforms: terrain.uniforms,
-                      fog:      false,
-                      lights:   false}],
-      materials = _.reduce(params, (r, p) => {
-                      r[p.name] = new ShaderMaterial({uniforms:       p.uniforms,
-                                                      vertexShader:   p.vertex,
-                                                      fragmentShader: p.fragment,
-                                                      lights:         p.lights,
-                                                      fog:            p.fog })
-                      return r }, {})
-
-  materials['heightmap']        = _noiseheight()
-  materials['displacementmap']  = _displacement(maps, textures)
-  materials['normalmap']        = _normalmap(maps, textures)
-
+function materials( dimensions, maps, textures) {
+  let materials = { terrain:          _terrain(),
+                    heightmap:        _noiseheight(),
+                    standard:         new MeshStandardMaterial(0xF9266B),
+                    noise:            _noise(textures),
+                    displacementmap:  _displacement(maps, textures),
+                    normalmap:        _normal(maps)}
   return materials}
 
 export default materials
