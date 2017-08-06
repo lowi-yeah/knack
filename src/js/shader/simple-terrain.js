@@ -107,34 +107,12 @@ let ShaderTerrain = {
       "vec3 specularTex = vec3( 1.0 );",
 
       "vec2 uvOverlay = uRepeatOverlay * vUv + uOffset;",
-      "vec2 uvBase = uRepeatBase * vUv;",
+      // "vec2 uvBase = uRepeatBase * vUv;",
+      "vec2 uvBase = vUv;",
 
       "vec3 normalTex = texture2D( tDetail, uvOverlay ).xyz * 2.0 - 1.0;",
       "normalTex.xy *= uNormalScale;",
       "normalTex = normalize( normalTex );",
-
-      "if( enableDiffuse1 && enableDiffuse2 ) {",
-
-        "vec4 colDiffuse1 = texture2D( tDiffuse1, uvOverlay );",
-        "vec4 colDiffuse2 = texture2D( tDiffuse2, uvOverlay );",
-
-        "colDiffuse1 = GammaToLinear( colDiffuse1, float( GAMMA_FACTOR ) );",
-        "colDiffuse2 = GammaToLinear( colDiffuse2, float( GAMMA_FACTOR ) );",
-
-        "diffuseColor *= mix ( colDiffuse1, colDiffuse2, 1.0 - texture2D( tDisplacement, uvBase ) );",
-
-      " } else if( enableDiffuse1 ) {",
-
-        "diffuseColor *= texture2D( tDiffuse1, uvOverlay );",
-
-      "} else if( enableDiffuse2 ) {",
-
-        "diffuseColor *= texture2D( tDiffuse2, uvOverlay );",
-
-      "}",
-
-      "if( enableSpecular )",
-        "specularTex = texture2D( tSpecular, uvOverlay ).xyz;",
 
       "mat3 tsb = mat3( vTangent, vBinormal, vNormal );",
       "vec3 finalNormal = tsb * normalTex;",
@@ -145,99 +123,71 @@ let ShaderTerrain = {
       "vec3 totalDiffuseLight = vec3( 0.0 );",
       "vec3 totalSpecularLight = vec3( 0.0 );",
 
-      // // point lights
+      // point lights
+      "#if NUM_POINT_LIGHTS > 0",
+        "for ( int i = 0; i < NUM_POINT_LIGHTS; i ++ ) {",
+          "vec3 lVector = pointLights[ i ].position + vViewPosition.xyz;",
+          "float attenuation = calcLightAttenuation( length( lVector ), pointLights[ i ].distance, pointLights[ i ].decay );",
+          "lVector = normalize( lVector );",
+          "vec3 pointHalfVector = normalize( lVector + viewPosition );",
+          "float pointDotNormalHalf = max( dot( normal, pointHalfVector ), 0.0 );",
+          "float pointDiffuseWeight = max( dot( normal, lVector ), 0.0 );",
+          "float pointSpecularWeight = specularTex.r * max( pow( pointDotNormalHalf, shininess ), 0.0 );",
+          "totalDiffuseLight += attenuation * pointLights[ i ].color * pointDiffuseWeight;",
+          "totalSpecularLight += attenuation * pointLights[ i ].color * specular * pointSpecularWeight * pointDiffuseWeight;",
+        "}",
+      "#endif",
 
-      // "#if NUM_POINT_LIGHTS > 0",
+      // directional lights
+      "#if NUM_DIR_LIGHTS > 0",
+        "vec3 dirDiffuse = vec3( 0.0 );",
+        "vec3 dirSpecular = vec3( 0.0 );",
+        "for( int i = 0; i < NUM_DIR_LIGHTS; i++ ) {",
+          "vec3 dirVector = directionalLights[ i ].direction;",
+          "vec3 dirHalfVector = normalize( dirVector + viewPosition );",
+          "float dirDotNormalHalf = max( dot( normal, dirHalfVector ), 0.0 );",
+          "float dirDiffuseWeight = max( dot( normal, dirVector ), 0.0 );",
+          "float dirSpecularWeight = specularTex.r * max( pow( dirDotNormalHalf, shininess ), 0.0 );",
+          "totalDiffuseLight += directionalLights[ i ].color * dirDiffuseWeight;",
+          "totalSpecularLight += directionalLights[ i ].color * specular * dirSpecularWeight * dirDiffuseWeight;",
+        "}",
 
-      //   "for ( int i = 0; i < NUM_POINT_LIGHTS; i ++ ) {",
+      "#endif",
 
-      //     "vec3 lVector = pointLights[ i ].position + vViewPosition.xyz;",
+      // hemisphere lights
 
-      //     "float attenuation = calcLightAttenuation( length( lVector ), pointLights[ i ].distance, pointLights[ i ].decay );",
+      "#if NUM_HEMI_LIGHTS > 10",
+        "vec3 hemiDiffuse  = vec3( 0.0 );",
+        "vec3 hemiSpecular = vec3( 0.0 );",
+        "for( int i = 0; i < NUM_HEMI_LIGHTS; i ++ ) {",
+          
+          "vec3 lVector = hemisphereLights[ i ].direction;",
 
-      //     "lVector = normalize( lVector );",
+          // diffuse
+          "float dotProduct = dot( normal, lVector );",
+          "float hemiDiffuseWeight = 0.5 * dotProduct + 0.5;",
+          "totalDiffuseLight += mix( hemisphereLights[ i ].groundColor, hemisphereLights[ i ].skyColor, hemiDiffuseWeight );",
 
-      //     "vec3 pointHalfVector = normalize( lVector + viewPosition );",
+          // specular (sky light)
+          "float hemiSpecularWeight = 0.0;",
+          "vec3 hemiHalfVectorSky = normalize( lVector + viewPosition );",
+          "float hemiDotNormalHalfSky = 0.5 * dot( normal, hemiHalfVectorSky ) + 0.5;",
+          "hemiSpecularWeight += specularTex.r * max( pow( hemiDotNormalHalfSky, shininess ), 0.0 );",
 
-      //     "float pointDotNormalHalf = max( dot( normal, pointHalfVector ), 0.0 );",
-      //     "float pointDiffuseWeight = max( dot( normal, lVector ), 0.0 );",
+          // specular (ground light)
+          "vec3 lVectorGround = -lVector;",
+          "vec3 hemiHalfVectorGround = normalize( lVectorGround + viewPosition );",
+          "float hemiDotNormalHalfGround = 0.5 * dot( normal, hemiHalfVectorGround ) + 0.5;",
+          "hemiSpecularWeight += specularTex.r * max( pow( hemiDotNormalHalfGround, shininess ), 0.0 );",
+          "totalSpecularLight += specular * mix( hemisphereLights[ i ].groundColor, hemisphereLights[ i ].skyColor, hemiDiffuseWeight ) * hemiSpecularWeight * hemiDiffuseWeight;}",
+      "#endif",
 
-      //     "float pointSpecularWeight = specularTex.r * max( pow( pointDotNormalHalf, shininess ), 0.0 );",
-
-      //     "totalDiffuseLight += attenuation * pointLights[ i ].color * pointDiffuseWeight;",
-      //     "totalSpecularLight += attenuation * pointLights[ i ].color * specular * pointSpecularWeight * pointDiffuseWeight;",
-
-      //   "}",
-
-      // "#endif",
-
-      // // directional lights
-
-      // "#if NUM_DIR_LIGHTS > 0",
-
-      //   "vec3 dirDiffuse = vec3( 0.0 );",
-      //   "vec3 dirSpecular = vec3( 0.0 );",
-
-      //   "for( int i = 0; i < NUM_DIR_LIGHTS; i++ ) {",
-
-      //     "vec3 dirVector = directionalLights[ i ].direction;",
-      //     "vec3 dirHalfVector = normalize( dirVector + viewPosition );",
-
-      //     "float dirDotNormalHalf = max( dot( normal, dirHalfVector ), 0.0 );",
-      //     "float dirDiffuseWeight = max( dot( normal, dirVector ), 0.0 );",
-
-      //     "float dirSpecularWeight = specularTex.r * max( pow( dirDotNormalHalf, shininess ), 0.0 );",
-
-      //     "totalDiffuseLight += directionalLights[ i ].color * dirDiffuseWeight;",
-      //     "totalSpecularLight += directionalLights[ i ].color * specular * dirSpecularWeight * dirDiffuseWeight;",
-
-      //   "}",
-
-      // "#endif",
-
-      // // hemisphere lights
-
-      // "#if NUM_HEMI_LIGHTS > 0",
-
-      //   "vec3 hemiDiffuse  = vec3( 0.0 );",
-      //   "vec3 hemiSpecular = vec3( 0.0 );",
-
-      //   "for( int i = 0; i < NUM_HEMI_LIGHTS; i ++ ) {",
-
-      //     "vec3 lVector = hemisphereLightDirection[ i ];",
-
-      //     // diffuse
-
-      //     "float dotProduct = dot( normal, lVector );",
-      //     "float hemiDiffuseWeight = 0.5 * dotProduct + 0.5;",
-
-      //     "totalDiffuseLight += mix( hemisphereLights[ i ].groundColor, hemisphereLights[ i ].skyColor, hemiDiffuseWeight );",
-
-      //     // specular (sky light)
-
-      //     "float hemiSpecularWeight = 0.0;",
-
-      //     "vec3 hemiHalfVectorSky = normalize( lVector + viewPosition );",
-      //     "float hemiDotNormalHalfSky = 0.5 * dot( normal, hemiHalfVectorSky ) + 0.5;",
-      //     "hemiSpecularWeight += specularTex.r * max( pow( hemiDotNormalHalfSky, shininess ), 0.0 );",
-
-      //     // specular (ground light)
-
-      //     "vec3 lVectorGround = -lVector;",
-
-      //     "vec3 hemiHalfVectorGround = normalize( lVectorGround + viewPosition );",
-      //     "float hemiDotNormalHalfGround = 0.5 * dot( normal, hemiHalfVectorGround ) + 0.5;",
-      //     "hemiSpecularWeight += specularTex.r * max( pow( hemiDotNormalHalfGround, shininess ), 0.0 );",
-
-      //     "totalSpecularLight += specular * mix( hemisphereLights[ i ].groundColor, hemisphereLights[ i ].skyColor, hemiDiffuseWeight ) * hemiSpecularWeight * hemiDiffuseWeight;",
-
-      //   "}",
-
-      // "#endif",
 
       "outgoingLight += diffuseColor.xyz * ( totalDiffuseLight + ambientLightColor + totalSpecularLight );",
+      // "outgoingLight += diffuseColor.xyz * ambientLightColor;",
+      "gl_FragColor = vec4( outgoingLight, diffuseColor.a );",
 
-      "gl_FragColor = vec4( outgoingLight, diffuseColor.a );",  // TODO, this should be pre-multiplied to allow for bright highlights on very transparent objects
+      // "gl_FragColor = vec4( outgoingLight, diffuseColor.a );",  // TODO, this should be pre-multiplied to allow for bright highlights on very transparent objects
 
       ShaderChunk[ "fog_fragment" ],
 
@@ -286,7 +236,8 @@ let ShaderTerrain = {
 
       "vUv = uv;",
 
-      "vec2 uvBase = uv * uRepeatBase;",
+      // "vec2 uvBase = uv * uRepeatBase;",
+      "vec2 uvBase = vUv;",
 
       // displacement mapping
 

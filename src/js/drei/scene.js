@@ -9,11 +9,10 @@ import {AmbientLight,
         PointLight,
         Scene, 
         SpotLight,
-        WebGLRenderer
-      } from 'three'
+        WebGLRenderer}    from 'three'
 
-import OrbitControls from '../lib/orbit-controls'
-import TrackballControls from '../lib/trackball-controls'
+import OrbitControls      from '../lib/orbit-controls'
+import TrackballControls  from '../lib/trackball-controls'
 
 function _controls(camera) {
   let controls = new OrbitControls( camera )
@@ -29,17 +28,17 @@ function _controls(camera) {
 
 function _lights(scene) {
   let ambient     = new AmbientLight( 0x111111 ),
-      directional = new DirectionalLight( 0xffffff, 0.5 ),
-      point       = new PointLight( 0xff4400, 1.5 ),
-      hemisphere  = new HemisphereLight( 0xffffff, 0xffffff, 1 )
+      directional = new DirectionalLight( 0xffffff, 1.15 ),
+      point       = new PointLight( 0xF4DAB4, 0.2 ),
+      sky         = new HemisphereLight(0xffffff, 0x080820, 1)
 
-  directional.position.set( 500, 2000, 0 )
-  point.position.set( 0, 800, 800 )
+  // directional.position.set( 0, 1000, 0 )
+  point.position.set( -800, 200, 0 );
 
-  scene.add( directional )
+  // scene.add( directional )
   scene.add( point )
-  // scene.add( ambient )
-  // scene.add( hemisphere )
+  // scene.add( sky )
+  scene.add( ambient )
   
   return {directional, point, ambient}}
 
@@ -53,11 +52,10 @@ function final( dimensions, color ) {
       lights    = _lights(scene),
       controls  = _controls(camera)
   
-  scene.fog = new Fog( 0x050505, 2000, 4000 )
+  scene.fog = new Fog( 0x050505, 4000, 8000 )
   scene.fog.color = color
 
-  camera.position.set( -1200, 800, 1200 );
-  // camera.position.z = 500
+  camera.position.set( -1200, 800, 1200 )
   scene.add( camera )
 
   return {scene, camera, lights, controls}}
