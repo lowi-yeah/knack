@@ -308,7 +308,8 @@ let ShaderTerrain = {
 
       "#endif",
 
-      "gl_Position = projectionMatrix * mvPosition;",
+      // "gl_Position = projectionMatrix * mvPosition;",
+      "gl_Position = projectionMatrix * modelViewMatrix * vec4( position, 1.0 );",
 
       "vViewPosition = -mvPosition.xyz;",
 
