@@ -110,10 +110,10 @@ let ShaderTerrain = {
       "vec2 uvBase = uRepeatBase * vUv;",
       // "vec2 uvBase = vUv;",
 
+      // "vec3 normalTex = vec3(0.0, 0.0, 0.0);",
       "vec3 normalTex = texture2D( tDetail, uvOverlay ).xyz * 2.0 - 1.0;",
       "normalTex.xy *= uNormalScale;",
       "normalTex = normalize( normalTex );",
-
       "mat3 tsb = mat3( vTangent, vBinormal, vNormal );",
       "vec3 finalNormal = tsb * normalTex;",
 

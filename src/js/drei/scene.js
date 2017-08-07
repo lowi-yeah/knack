@@ -1,7 +1,9 @@
 import {AmbientLight,
+        AxisHelper,
         DirectionalLight,
         Fog,
         FogExp2,
+        GridHelper,
         HemisphereLight,
         Math,
         OrthographicCamera,
@@ -9,7 +11,8 @@ import {AmbientLight,
         PointLight,
         Scene, 
         SpotLight,
-        WebGLRenderer}    from 'three'
+        WebGLRenderer, 
+        Vector3}    from 'three'
 
 import OrbitControls      from '../lib/orbit-controls'
 import TrackballControls  from '../lib/trackball-controls'
@@ -28,17 +31,15 @@ function _controls(camera) {
 
 function _lights(scene) {
   let ambient     = new AmbientLight( 0x111111 ),
-      directional = new DirectionalLight( 0xffffff, 0.4 ),
-      point       = new PointLight( 0xF4DAB4, 0.2 ),
-      sky         = new HemisphereLight(0xffffff, 0x080820, 1)
-
-  directional.position.set( 0, 1000, 0 )
+      directional = new DirectionalLight( 0xffffff, 1.15 ),
+      point       = new PointLight( 0xF4DAB4, 1.5 )
+     
+  directional.position.set( 0, 1000, 1000 )
   point.position.set( -800, 200, 0 );
 
-  scene.add( directional )
-  scene.add( point )
-  // scene.add( sky )
-  scene.add( ambient )
+  // scene.add( directional )
+  // scene.add( point )
+  // scene.add( ambient )
   
   return {directional, point, ambient}}
 
@@ -48,17 +49,24 @@ function final( dimensions, color, useControls ) {
   //————————————————————————————————
   let ratio     = dimensions.width / dimensions.height,
       scene     = new Scene(),
-      camera    = new PerspectiveCamera(40, ratio, 2, 6000),
+      camera    = new PerspectiveCamera(40, ratio, 2, 2000000),
       lights    = _lights(scene),
+      helper    = new GridHelper( 10000, 2, 0xffffff, 0xffffff ),
       controls
+
+  scene.add( helper )
 
   if(useControls) controls = _controls(camera)
   
-  scene.fog = new Fog( 0x050505, 4000, 8000 )
+  scene.fog = new Fog( 0x050505, 2000, 4000 )
   scene.fog.color = color
 
-  camera.position.set( -1200, 800, 1200 )
+  // camera.position.set( -1200, 800, 1200 )
+  camera.position.set( -1200, 320, 2000 )
+  camera.lookAt( new Vector3(0, 0, -800) )
   scene.add( camera )
+
+  // scene.add( new AxisHelper(20) )
 
   return {scene, camera, lights, controls}}
 

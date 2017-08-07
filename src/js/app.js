@@ -3,6 +3,7 @@
 // import jQuery from 'jquery'
 import Detector from './lib/Detector'
 import drei     from './drei'
+import sky     from './sky'
 
 // assets is a collection of all external assets used throughout the site
 // it exists because webpack (the bundler used for gathering and packaging all web files)
@@ -16,4 +17,4 @@ document.addEventListener('DOMContentLoaded', event => {
   console.log('hello')
 
   if( !Detector.webgl ) Detector.addGetWebGLMessage()
-  else drei('three') })
+  else sky('three') })
