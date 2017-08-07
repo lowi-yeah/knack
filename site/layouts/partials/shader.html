@@ -10,7 +10,6 @@
 </script>
 
 <script id="fragmentshader-noise" type="x-shader/x-fragment">
-
   //
   // Description : Array and textureless GLSL 3D simplex noise function.
   //      Author : Ian McEwan, Ashima Arts.
@@ -19,7 +18,6 @@
   //     License : Copyright (C) 2011 Ashima Arts. All rights reserved.
   //               Distributed under the MIT License. See LICENSE file.
   //
-
   uniform float time;
   varying vec2 vUv;
 
@@ -129,7 +127,8 @@
   void main( void ) {
 
     vec3 coord = vec3( vUv, -time );
-    float n = 1.0 - surface3( coord );
+    // float n = 1.0 - surface3( coord );
+    float n = surface3( coord );
 
     gl_FragColor = vec4( vec3( n, n, n ), 1.0 );
 

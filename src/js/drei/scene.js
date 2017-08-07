@@ -28,21 +28,21 @@ function _controls(camera) {
 
 function _lights(scene) {
   let ambient     = new AmbientLight( 0x111111 ),
-      directional = new DirectionalLight( 0xffffff, 1.15 ),
+      directional = new DirectionalLight( 0xffffff, 0.4 ),
       point       = new PointLight( 0xF4DAB4, 0.2 ),
       sky         = new HemisphereLight(0xffffff, 0x080820, 1)
 
-  // directional.position.set( 0, 1000, 0 )
+  directional.position.set( 0, 1000, 0 )
   point.position.set( -800, 200, 0 );
 
-  // scene.add( directional )
+  scene.add( directional )
   scene.add( point )
   // scene.add( sky )
   scene.add( ambient )
   
   return {directional, point, ambient}}
 
-function final( dimensions, color ) {
+function final( dimensions, color, useControls ) {
 
   // Boiler Plate Scene Setup
   //————————————————————————————————
@@ -50,7 +50,9 @@ function final( dimensions, color ) {
       scene     = new Scene(),
       camera    = new PerspectiveCamera(40, ratio, 2, 6000),
       lights    = _lights(scene),
-      controls  = _controls(camera)
+      controls
+
+  if(useControls) controls = _controls(camera)
   
   scene.fog = new Fog( 0x050505, 4000, 8000 )
   scene.fog.color = color

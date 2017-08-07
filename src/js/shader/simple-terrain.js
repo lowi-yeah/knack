@@ -107,8 +107,8 @@ let ShaderTerrain = {
       "vec3 specularTex = vec3( 1.0 );",
 
       "vec2 uvOverlay = uRepeatOverlay * vUv + uOffset;",
-      // "vec2 uvBase = uRepeatBase * vUv;",
-      "vec2 uvBase = vUv;",
+      "vec2 uvBase = uRepeatBase * vUv;",
+      // "vec2 uvBase = vUv;",
 
       "vec3 normalTex = texture2D( tDetail, uvOverlay ).xyz * 2.0 - 1.0;",
       "normalTex.xy *= uNormalScale;",
@@ -233,11 +233,9 @@ let ShaderTerrain = {
       "vBinormal = normalize( vBinormal );",
 
       // texture coordinates
-
       "vUv = uv;",
-
-      // "vec2 uvBase = uv * uRepeatBase;",
-      "vec2 uvBase = vUv;",
+      "vec2 uvBase = uv * uRepeatBase;",
+      // "vec2 uvBase = vUv;",
 
       // displacement mapping
 

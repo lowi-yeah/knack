@@ -44,6 +44,12 @@ import ςomposer             from './drei/composer'
 import terrainΣ             from './shader/simple-terrain'
 // import terrainΣ             from './shader/terrain'
 
+let config  = { wireframe:    true,
+                useControls:  true,
+                glitchNoise:  false,
+                updateNoise:  true
+              }
+
 // Shaders
 // ————————————————
 let basicΣ      = ShaderExtras.basic,
@@ -102,12 +108,11 @@ let DEBUG                   = true,
     renderTargetParameters  = { minFilter: LinearFilter, 
                                 magFilter: LinearFilter, 
                                 format: RGBAFormat, 
-                                // stencilBufer: false 
+                                stencilBufer: false 
                               }
 
 // exploit a glitch in the noise shader which starts to behave weird at some point
-let GLITCH_NOISE  = false,
-    updateNoise   = true
+
 
 let clearColor = new Color()
 clearColor.setHSL(0.102, 0.64, 0.825)
@@ -196,7 +201,7 @@ function _loadMaterials(textures) {
 
     // seed the noise shader
     // values above 200000 (and below 10000000) produce increasinly weird artifacts
-    if(GLITCH_NOISE) noiseShader.uniforms.time.value = _.random(200000, 8100000) 
+    if(config.glitchNoise) noiseShader.uniforms.time.value = _.random(200000, 8100000) 
     else noiseShader.uniforms.time.value = _.random(64000) 
 
     normalMapShader.uniforms.tDiffuse.value = textures.alps
@@ -276,15 +281,17 @@ function drei(domId) {
       // ————————————————————————————————
       bufferComposition.render(0)
 
-      let renderScene = sςene.final(dimensions, clearColor)
+      let renderScene = sςene.final(dimensions, clearColor, config.useControls)
 
       let terrainShader   = { uniforms:       UniformsUtils.clone( terrainΣ.uniforms ),
                               vertexShader:   terrainΣ.vertexShader,
                               fragmentShader: terrainΣ.fragmentShader,
                               lights:         true,
                               fog:            true},
-          terrainMaterial = new ShaderMaterial(terrainShader)
+          terrainMaterial
 
+      if(config.wireframe) _.merge(terrainShader, {wireframe: true})
+      terrainMaterial = new ShaderMaterial(terrainShader)
 
 
       // console.log('terrainShader', terrainShader)
@@ -296,21 +303,22 @@ function drei(domId) {
       terrainShader.uniforms.tDiffuse1.value          = textures.terrain.diffuse1
       terrainShader.uniforms.tDiffuse2.value          = textures.terrain.diffuse2
       terrainShader.uniforms.tSpecular.value          = heightTarget.texture
-      terrainShader.uniforms.tDetail.value            = textures.terrain.detailTexture
+      terrainShader.uniforms.tDetail.value            = normalTarget.texture
       terrainShader.uniforms.enableDiffuse1.value     = false
       terrainShader.uniforms.enableDiffuse2.value     = false
       terrainShader.uniforms.enableSpecular.value     = false
       terrainShader.uniforms.diffuse.value.setHex(      0xffffff )
       terrainShader.uniforms.specular.value.setHex(     0xffffff )
-      terrainShader.uniforms.shininess.value          = 30
+      terrainShader.uniforms.shininess.value          = 12
       terrainShader.uniforms.uDisplacementScale.value = 240
-      terrainShader.uniforms.uRepeatOverlay.value.set(  1, 1 )
-     
+      terrainShader.uniforms.uRepeatOverlay.value.set(  6, 6 )
+
+
       // create a sphere and assign the material
       // let icosahedron = new Mesh( new IcosahedronGeometry( 242 ), basicMaterial)
       let heightMaterial  = _textureMaterial(),
           // icosahedron     = new Mesh( new IcosahedronGeometry( 242 ), heightMaterial.μ)
-          icosahedron     = new Mesh( new IcosahedronGeometry( 242 ), new MeshLambertMaterial(0x9B0A07))
+          icosahedron     = new Mesh( new IcosahedronGeometry( 320 ), new MeshLambertMaterial(0x9B0A07))
       renderScene.scene.add( icosahedron )
 
 
@@ -356,7 +364,8 @@ function drei(domId) {
       // ————————————————————————————————
       function _render() {
         requestAnimationFrame(_render) // reschedule
-        renderScene.controls.update()
+
+        if( config.useControls ) renderScene.controls.update()
 
         δ         = clock.getDelta()
         lightVal  = Math.clamp( lightVal + 0.5 * δ * lightDir, fLow, fHigh )
@@ -371,7 +380,7 @@ function drei(domId) {
         // renderScene.lights.point.intensity          = Math.mapLinear( valNorm, 0, 1, 0.9, 0.81 )
         // renderScene.lights.point.color.setHSL( 0.1, 0.5, lightVal )
 
-        if ( updateNoise ) {
+        if ( config.updateNoise ) {
           materials.noise.ς.uniforms.time.value     += δ * 0.02 
           heightMaterial.ς.uniforms.tDiffuse.value  = heightTarget.texture
           normalMaterial.ς.uniforms.tDiffuse.value  = normalTarget.texture
