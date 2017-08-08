@@ -63,7 +63,7 @@ let config  = { wireframe:    false,
 
 let DEBUG                   = true,
     dimensions              = { width: window.innerWidth, height: window.innerHeight},
-    resolution              = { width: 256,  height: 256},
+    resolution              = { width: 1024,  height: 1024},
     renderTargetParameters  = { minFilter: LinearFilter, 
                                 magFilter: LinearFilter, 
                                 format: RGBAFormat, 
@@ -81,7 +81,7 @@ function _initSky(scene) {
       sun = new PointLight( 0xffffff, 1)
   sun.position.y = - 700000
   sun.visible = false
-  // scene.add( sky.mesh )
+  scene.add( sky.mesh )
   // scene.add( sun )
   return {sky, sun}}
 
@@ -90,8 +90,8 @@ function _loadTextures() {
     let loadingManager  = new LoadingManager(),
         tl              = new TextureLoader( loadingManager ),
         // heightmap       = tl.load( '/textures/gradient.jpg')
-        heightmap       = tl.load( '/textures/europa.jpg')
-        // heightmap       = tl.load( '/textures/alpenvorland.png')
+        // heightmap       = tl.load( '/textures/europa.jpg')
+        heightmap       = tl.load( '/textures/alpenvorland.png')
     loadingManager.onLoad   = () => { resolve({heightmap})}
     loadingManager.onError  = (url) => { reject('There was an error loading ' + url)}})}
 
@@ -179,21 +179,12 @@ function drei(domId) {
         
       // textureShader.uniforms.tDiffuse.value = maps.normal.texture
       terrainShader.uniforms.tNormal.value            = maps.normal.texture
-      terrainShader.uniforms.uNormalScale.value       = 3.5
       terrainShader.uniforms.tDisplacement.value      = maps.height.texture
-      terrainShader.uniforms.diffuse.value.setHex(      0xA6C85D5 )
-      terrainShader.uniforms.specular.value.setHex(     0xffffff )
-      terrainShader.uniforms.shininess.value          = 30
       terrainShader.uniforms.uDisplacementScale.value = 320
 
-      terrainShader.uniforms.tDiffuse1.value          = null
-      terrainShader.uniforms.tDiffuse2.value          = null
-      terrainShader.uniforms.tSpecular.value          = null
-      terrainShader.uniforms.tDetail.value            = null
-      terrainShader.uniforms.enableDiffuse1.value     = false
-      terrainShader.uniforms.enableDiffuse2.value     = false
-      terrainShader.uniforms.enableSpecular.value     = false
-      terrainShader.uniforms.uRepeatOverlay.value.set(  6, 6 )
+      terrainShader.uniforms.diffuse.value.setHex(      0xCFCFCF )
+      terrainShader.uniforms.specular.value.setHex(     0xffffff )
+      terrainShader.uniforms.shininess.value          = 2
 
       // textureShader.uniforms.tDiffuse.value = maps.normal.texture
       textureShader.uniforms.tDiffuse.value = maps.height.texture
@@ -205,10 +196,10 @@ function drei(domId) {
             camera, 
             controls}     = sςene.final(dimensions, clearColor, config.useControls),
           {sky, sun}      = _initSky(scene),
-          geometryTerrain = new PlaneBufferGeometry( 6000, 6000, 256, 256 ),
+          geometryTerrain = new PlaneBufferGeometry( 6000, 6000, 512, 512 ),
           terrain         = new Mesh( geometryTerrain,  terrainMaterial),
-          icoGeometry     = new IcosahedronGeometry( 1200, 2 ),
-          icosahedron     = new Mesh(icoGeometry , ςTextureMaterial)
+          icoGeometry     = new IcosahedronGeometry( 420, 2 ),
+          icosahedron     = new Mesh(icoGeometry , phongMaterial)
 
       // initialize the GUI
       gμi(sky, sun)
@@ -223,6 +214,23 @@ function drei(domId) {
       renderer.setClearColor( clearColor )
       scene.add( terrain )
       scene.add( icosahedron )
+
+
+      // create pointlight that that circles around the scene
+      let pivotPoint    = new Object3D(),
+          pointLight    = new PointLight( 0xffffff, lightIntensity ),
+          dirLight      = new DirectionalLight( 0xffffff, lightIntensity )
+
+      pivotPoint.rotation.y = _degrees(120)
+      pointLight.position.set( 1600, 420, 0 )
+      pointLight.lookAt( 0, 0, 0 )
+
+      dirLight.position.set( -1600, 420, 0 )
+      dirLight.lookAt( 0, 0, 0 )
+
+      scene.add(pivotPoint)
+      pivotPoint.add(pointLight)
+      // pivotPoint.add(dirLight)
 
       // Compose
       // ————————————————————————————————
@@ -242,9 +250,7 @@ function drei(domId) {
 
       console.log('here we go —→')
 
-  // let pointLight = new PointLight( 0xffffff, 1.5 )
-  // point.position.set( 1600, 1600, 1600 );
-  // scene.add( point )
+  
   
       // Render
       // ————————————————————————————————
@@ -253,14 +259,8 @@ function drei(domId) {
         if( config.useControls ) controls.update()
         δ = clock.getDelta()
 
-        // terrainShader.uniforms.uNormalScale.value   = ThreeMath.mapLinear( valNorm, 0, 1, 0.6, 3.5 )
-        
+        pivotPoint.rotation.y += 0.02
 
-        // lightVal  = ThreeMath.clamp( lightVal + 0.5 * δ * lightDir, fLow, fHigh )
-        // valNorm   = ( lightVal - fLow ) / ( fHigh - fLow )
-        // scene.fog.color.setHSL( 0.1, 0.5, lightVal )
-        // renderer.setClearColor( scene.fog.color )
-        
         // render the buffer composition
         // which creates the height and normal maps for our terrain shader.
         // The maps get written into the height and normal targets (via the save passes)
