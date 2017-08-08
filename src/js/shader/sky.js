@@ -21,25 +21,18 @@ import {BackSide,
         Vector3 } from 'three'
 
 let Sky = function () {
-  var skyShader = Sky.SkyShader;
-
-  var skyUniforms = UniformsUtils.clone( skyShader.uniforms );
-
-  var skyMat = new ShaderMaterial( {
-    fragmentShader: skyShader.fragmentShader,
-    vertexShader: skyShader.vertexShader,
-    uniforms: skyUniforms,
-    side: BackSide
-  } );
-
-  var skyGeo = new SphereBufferGeometry( 450000, 32, 15 );
-  var skyMesh = new Mesh( skyGeo, skyMat );
-
+  let skyShader   = Sky.SkyShader,
+      skyUniforms = UniformsUtils.clone( skyShader.uniforms ),
+      skyMat      = new ShaderMaterial({fragmentShader: skyShader.fragmentShader,
+                                        vertexShader:   skyShader.vertexShader,
+                                        uniforms:       skyUniforms,
+                                        side:           BackSide } ),
+      skyGeo      = new SphereBufferGeometry( 450000, 32, 15 ),
+      skyMesh     = new Mesh( skyGeo, skyMat )
+  
   // Expose variables
-  this.mesh = skyMesh;
-  this.uniforms = skyUniforms;
-
-};
+  this.mesh     = skyMesh
+  this.uniforms = skyUniforms }
 
 Sky.SkyShader = {
 

@@ -54,9 +54,6 @@ import ςomposer             from './drei/composer'
 import terrainΣ             from './shader/simple-terrain'
 // import terrainΣ             from './shader/terrain'
 
-
-console.log('SunLight', SunLight)
-
 let config  = { wireframe:    false,
                 useControls:  true,
                 glitchNoise:  false,

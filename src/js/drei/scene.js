@@ -29,28 +29,13 @@ function _controls(camera) {
 
   return controls}
 
-function _lights(scene) {
-  let ambient     = new AmbientLight( 0x111111 ),
-      directional = new DirectionalLight( 0xffffff, 1.15 ),
-      point       = new PointLight( 0xF4DAB4, 1.5 )
-     
-  directional.position.set( 0, 1000, 1000 )
-  point.position.set( -800, 200, 0 );
-
-  // scene.add( directional )
-  // scene.add( point )
-  // scene.add( ambient )
-  
-  return {directional, point, ambient}}
 
 function final( dimensions, color, useControls ) {
-
   // Boiler Plate Scene Setup
   //————————————————————————————————
   let ratio     = dimensions.width / dimensions.height,
       scene     = new Scene(),
-      camera    = new PerspectiveCamera(40, ratio, 2, 2000000),
-      lights    = _lights(scene),
+      camera    = new PerspectiveCamera(100, ratio, 2, 2000000),
       helper    = new GridHelper( 10000, 2, 0xffffff, 0xffffff ),
       controls
 
@@ -62,13 +47,11 @@ function final( dimensions, color, useControls ) {
   scene.fog.color = color
 
   // camera.position.set( -1200, 800, 1200 )
-  camera.position.set( -1200, 320, 2000 )
+  camera.position.set( -1200, 1020, 2000 )
   camera.lookAt( new Vector3(0, 0, -800) )
   scene.add( camera )
 
-  // scene.add( new AxisHelper(20) )
-
-  return {scene, camera, lights, controls}}
+  return {scene, camera, controls}}
 
 function buffer(dimensions) {
   let scene     = new Scene(),
