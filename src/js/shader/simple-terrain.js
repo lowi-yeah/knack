@@ -69,7 +69,7 @@ let ShaderTerrain = {
       "vec3 outgoingLight = vec3( 0.0 );",  // outgoing light does not have an alpha, the surface does
       "vec4 diffuseColor = vec4( diffuse, opacity );",
 
-      // "vec3 specularTex = vec3( 0.4 );",
+      "vec3 specularTex = vec3( 0.9 );",
 
       "vec3 finalNormal   = vNormal;",
       "vec3 normal        = normalize( finalNormal );",
@@ -85,10 +85,11 @@ let ShaderTerrain = {
           "lVector = normalize( lVector );",
           "float pointDiffuseWeight = max( dot( normal, lVector ), 0.0 );",
           "totalDiffuseLight += attenuation * pointLights[ i ].color * pointDiffuseWeight;",
-          // "vec3 pointHalfVector = normalize( lVector + viewPosition );",
-          // "float pointDotNormalHalf = max( dot( normal, pointHalfVector ), 0.0 );",
-          // "float pointSpecularWeight = specularTex.r * max( pow( pointDotNormalHalf, shininess ), 0.0 );",
-          // "totalSpecularLight += attenuation * pointLights[ i ].color * specular * pointSpecularWeight * pointDiffuseWeight;",
+
+          "vec3 pointHalfVector = normalize( lVector + viewPosition );",
+          "float pointDotNormalHalf = max( dot( normal, pointHalfVector ), 0.0 );",
+          "float pointSpecularWeight = specularTex.r * max( pow( pointDotNormalHalf, shininess ), 0.0 );",
+          "totalSpecularLight += attenuation * pointLights[ i ].color * specular * pointSpecularWeight * pointDiffuseWeight;",
         "}",
       "#endif",
 
@@ -100,11 +101,11 @@ let ShaderTerrain = {
           "vec3 dirVector = directionalLights[ i ].direction;",
           "float dirDiffuseWeight = max( dot( normal, dirVector ), 0.0 );",
 
-          // "vec3 dirHalfVector = normalize( dirVector + viewPosition );",
-          // "float dirDotNormalHalf = max( dot( normal, dirHalfVector ), 0.0 );",
-          // "totalDiffuseLight += directionalLights[ i ].color * dirDiffuseWeight;",
-          // "float dirSpecularWeight = specularTex.r * max( pow( dirDotNormalHalf, shininess ), 0.0 );",
-          // "totalSpecularLight += directionalLights[ i ].color * specular * dirSpecularWeight * dirDiffuseWeight;",
+          "vec3 dirHalfVector = normalize( dirVector + viewPosition );",
+          "float dirDotNormalHalf = max( dot( normal, dirHalfVector ), 0.0 );",
+          "totalDiffuseLight += directionalLights[ i ].color * dirDiffuseWeight;",
+          "float dirSpecularWeight = specularTex.r * max( pow( dirDotNormalHalf, shininess ), 0.0 );",
+          "totalSpecularLight += directionalLights[ i ].color * specular * dirSpecularWeight * dirDiffuseWeight;",
         "}",
 
       "#endif",

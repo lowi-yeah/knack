@@ -3,11 +3,11 @@ import { Vector3 } from 'three'
 let gui = function(sky, sun) {
   let effectController  = { turbidity:        10,
                             rayleigh:         2,
-                            mieCoefficient:   0.005,
+                            mieCoefficient:   0.02,
                             mieDirectionalG:  0.8,
                             luminance:        1,
-                            inclination:      0.2, // elevation / inclination
-                            azimuth:          0.16, // Facing front,
+                            inclination:      0.46, // elevation / inclination
+                            azimuth:          0.28, // Facing front,
                             sun:              true },
       distance          = 400000,
       gui               = new dat.GUI()
