@@ -277,7 +277,7 @@ function drei(domId) {
 
 
       // perpare a seperate renderer used for rendering the sky only
-      let textureResolution   = {width: 128, height: 128},
+      let textureResolution   = {width: 64, height: 64},
           textureRenderer     = new WebGLRenderer(),
           textureTarget       = new WebGLRenderTarget(textureResolution.width, 
                                                       textureResolution.height,
@@ -303,11 +303,16 @@ function drei(domId) {
       scenePass.renderToScreen = true
 
       
-      let gl      = textureRenderer.context,
-          pixels  = new Uint8Array(gl.drawingBufferWidth * gl.drawingBufferHeight/2 * 3)
+      let numRows   = 3,
+          gl        = textureRenderer.context,
+          // pixels    = new Uint8Array(gl.drawingBufferWidth * gl.drawingBufferHeight * 3),
+          pixels    = new Uint8Array(gl.drawingBufferWidth * numRows * 3),
+          fogColor  = new Color
 
       function _getPixels() {
-        gl.readPixels(0, 0, gl.drawingBufferWidth, gl.drawingBufferHeight/2, gl.RGB, gl.UNSIGNED_BYTE, pixels)
+        // gl.readPixels(0, 0, gl.drawingBufferWidth, gl.drawingBufferHeight, gl.RGB, gl.UNSIGNED_BYTE, pixels)
+        // gl.readPixels(0, (gl.drawingBufferHeight/2) - 1, gl.drawingBufferWidth, 1, gl.RGB, gl.UNSIGNED_BYTE, pixels)
+        gl.readPixels(0, (gl.drawingBufferHeight/2) - 1, gl.drawingBufferWidth, numRows, gl.RGB, gl.UNSIGNED_BYTE, pixels)
         let l = _.range(pixels.length/3),
             c = _.reduce(l, (ρ, i) => {
                   ρ.r += pixels[i*3]
@@ -320,10 +325,14 @@ function drei(domId) {
         c.g = ( c.g / ( pixels.length / 3 ) ) / 255
         c.b = ( c.b / ( pixels.length / 3 ) ) / 255
 
-        color.r = c.r
-        color.g = c.g
-        color.b = c.b
-        scene.fog.color = color }
+        fogColor.r = c.r
+        fogColor.g = c.g
+        fogColor.b = c.b
+        scene.fog.color = fogColor 
+        
+        // debug
+        document.getElementById('sky-color').style.backgroundColor = '#' + fogColor.getHexString()
+      }
 
       let clock     = new Clock(),
           buffered  = false,
@@ -356,7 +365,7 @@ function drei(domId) {
 
         composition.render(δ) 
         textureComposition.render(δ) 
-        // _getPixels()
+        _getPixels()
       }
       
       _render() // here we go…
