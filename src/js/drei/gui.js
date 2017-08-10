@@ -6,7 +6,7 @@ let gui = function(sky, sun) {
                             mieCoefficient:   0.02,
                             mieDirectionalG:  0.8,
                             luminance:        1,
-                            inclination:      0.48, // elevation / inclination
+                            inclination:      0.18, // elevation / inclination
                             azimuth:          0.28, // Facing front,
                             sun:              true },
       distance          = 400000,
