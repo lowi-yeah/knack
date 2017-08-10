@@ -2,7 +2,6 @@
 
 // import jQuery from 'jquery'
 import Detector from './lib/Detector'
-import drei     from './drei'
 import sky     from './sky'
 
 // assets is a collection of all external assets used throughout the site

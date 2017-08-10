@@ -27,12 +27,14 @@ let Sky = function () {
                                         vertexShader:   skyShader.vertexShader,
                                         uniforms:       skyUniforms,
                                         side:           BackSide } ),
-      skyGeo      = new SphereBufferGeometry( 450000, 32, 15 ),
-      skyMesh     = new Mesh( skyGeo, skyMat )
+      skyGeo      = new SphereBufferGeometry( 450000, 32, 15 )
+      // skyMesh     = new Mesh( skyGeo, skyMat )
   
   // Expose variables
-  this.mesh     = skyMesh
-  this.uniforms = skyUniforms }
+  // this.mesh     = skyMesh
+  this.uniforms = skyUniforms
+  this.material = skyMat
+  this.geometry = skyGeo }
 
 Sky.SkyShader = {
 

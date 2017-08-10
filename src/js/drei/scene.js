@@ -20,23 +20,20 @@ import TrackballControls  from '../lib/trackball-controls'
 function _controls(camera) {
   let controls = new OrbitControls( camera )
   controls.target.set( 0, 0, 0 )
-
-  controls.rotateSpeed = 1.0
-  controls.zoomSpeed = 1.2
-  controls.panSpeed = 0.8
-
-  controls.keys = [ 65, 83, 68 ]
-
-  return controls}
-
+  controls.rotateSpeed  = 1.0
+  controls.zoomSpeed    = 1.2
+  controls.panSpeed     = 0.8
+  controls.keys         = [ 65, 83, 68 ]
+  return controls }
 
 function final( dimensions, color, useControls ) {
+
   // Boiler Plate Scene Setup
   //————————————————————————————————
-  let ratio     = dimensions.width / dimensions.height,
-      scene     = new Scene(),
-      camera    = new PerspectiveCamera(100, ratio, 2, 2000000),
-      helper    = new GridHelper( 10000, 2, 0xffffff, 0xffffff ),
+  let ratio   = dimensions.width / dimensions.height,
+      scene   = new Scene(),
+      camera  = new PerspectiveCamera(100, ratio, 2, 2000000),
+      helper  = new GridHelper( 10000, 2, 0xffffff, 0xffffff ),
       controls
 
   scene.add( helper )
@@ -60,11 +57,9 @@ function buffer(dimensions) {
                                           dimensions.height /  2, 
                                           dimensions.height / -2, 
                                           -10000, 10000 )
-
   // setup camera
   camera.position.z = 100
   scene.add( camera )
-
   return {scene, camera}}
 
 

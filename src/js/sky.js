@@ -3,7 +3,9 @@ import {BoxGeometry,
         Color,
         DirectionalLight, 
         FlatShading,
+        Fog,
         FogExp2,
+        GridHelper,
         IcosahedronGeometry,
         LinearFilter,
         LoadingManager,
@@ -48,6 +50,7 @@ import {BloomPass,
 // import fontLoader     from './lib/font-loader'
 import BufferGeometryUtils  from './lib/buffer-geometry-utils'
 import ShaderExtras         from './lib/shader-extras'
+import OrbitControls        from './lib/orbit-controls'
 import sςene                from './drei/scene'
 import gμi                  from './drei/gui'
 import terrainΣ             from './shader/simple-terrain'
@@ -55,9 +58,8 @@ import textureΣ             from './shader/texture'
 import normalΣ              from './shader/normal-map'
 import SkyΣ                 from './shader/sky'
 
-
 let config  = { wireframe:    false,
-                useControls:  false}
+                useControls:  true}
 
 let DEBUG                   = true,
     dimensions              = { width: window.innerWidth, height: window.innerHeight},
@@ -73,14 +75,20 @@ clearColor.setHSL(0.102, 0.64, 0.825)
 
 function _degrees(δ) {return ThreeMath.DEG2RAD * δ}
 
-function _initSky(scene) {
+function _initSky(scene, skyScene) {
   // Add Sky Mesh
-  let sky = new SkyΣ(),
-      sun = new PointLight( 0xffffff, 1)
-  sun.position.y = - 700000
-  sun.visible = false
-  scene.add( sky.mesh )
+  let sky  = new SkyΣ(),
+      sun  = new PointLight( 0xffffff, 1)
+  sun.position.y  = -700000
+  sun.visible     = true
+  
+  let σ = new Mesh( sky.geometry, sky.material ),
+      ς = new Mesh( sky.geometry, sky.material )
+
   scene.add( sun )
+  scene.add( σ )
+  skyScene.add( ς )
+
   return {sky, sun}}
 
 function _loadTextures() {
@@ -88,8 +96,8 @@ function _loadTextures() {
     let loadingManager  = new LoadingManager(),
         tl              = new TextureLoader( loadingManager ),
         // heightmap       = tl.load( '/textures/gradient.jpg')
-        heightmap       = tl.load( '/textures/europa.jpg')
-        // heightmap       = tl.load( '/textures/alpenvorland.png')
+        // heightmap       = tl.load( '/textures/europa.jpg')
+        heightmap       = tl.load( '/textures/alpenvorland.png')
     loadingManager.onLoad   = () => { resolve({heightmap})}
     loadingManager.onError  = (url) => { reject('There was an error loading ' + url)}})}
 
@@ -97,21 +105,33 @@ function drei(domId) {
   console.log('initialzing drei')
 
   _loadTextures()
+
     .then((textures) => {
+      // Render the given heightmap 
+      // once as is and once with a normal-map shader apllied.
+      // The results of both these render passes are written
+      // into GLRenderTargets which are handed down to calculate
+      // trhe displacement and normals of the terrain shader
+
+      // we only create one renderer for all scenes
+      // create it there since here is wehre we need it for the first time
       let renderer = new WebGLRenderer()
       document.getElementById(domId).appendChild(renderer.domElement)
       renderer.setPixelRatio( window.devicePixelRatio )
       renderer.setSize( dimensions.width, dimensions.height )
 
+      // create the shader which generates a normal map from a given heightmap
       let normalShader      = { uniforms:       UniformsUtils.clone( normalΣ.uniforms ),
                                 vertexShader:   normalΣ.vertexShader,
                                 fragmentShader: normalΣ.fragmentShader},
           normalMaterial    = new ShaderMaterial(normalShader)
 
-      // no need to set the heightmap, as it will be set within the shader pass
+      // No need to set the heightmap, as it will be set within the shader pass
       // normalShader.uniforms.tDiffuse.value  = textures.heightmap
-      let s = new Scene(), 
-          c = new PerspectiveCamera()
+
+      // Create an aempty scene and a camera for a minimal render pass
+      // I'm not even sure whether this is necessary
+      let s = new Scene(),c = new PerspectiveCamera()
       s.add(c)
 
       // composition
@@ -160,6 +180,7 @@ function drei(domId) {
           textureShader     = { uniforms:       UniformsUtils.clone( textureΣ.uniforms ),
                                 vertexShader:   textureΣ.vertexShader,
                                 fragmentShader: textureΣ.fragmentShader},
+
           ςTextureMaterial  = new ShaderMaterial(textureShader),
 
           textureMaterial   = new MeshPhongMaterial({ color: 0xE8873B, 
@@ -175,7 +196,7 @@ function drei(domId) {
       terrainShader.uniforms.tDisplacement.value      = maps.height.texture
       terrainShader.uniforms.uDisplacementScale.value = 320
 
-      terrainShader.uniforms.diffuse.value.setHex(      0x383838 )
+      terrainShader.uniforms.diffuse.value.setHex(      0xffffff )
       terrainShader.uniforms.specular.value.setHex(     0xffffff )
       terrainShader.uniforms.shininess.value          = 98
 
@@ -183,123 +204,107 @@ function drei(domId) {
       textureShader.uniforms.tDiffuse.value = maps.height.texture
       // textureShader.uniforms.tDiffuse.value = textures.heightmap
 
-      // let skyShader   = { uniforms:       UniformsUtils.clone( SkyΣ.SkyShader.uniforms ),
-      //                     vertexShader:   SkyΣ.SkyShader.vertexShader,
-      //                     fragmentShader: SkyΣ.SkyShader.fragmentShader},
-      //     skyMaterial = new ShaderMaterial(skyShader),
-      //     skyTarget   = new WebGLRenderTarget(resolution.width, resolution.height, 
-      //                                               renderTargetParameters),
-      //     opts        = { turbidity:        10,
-      //                     rayleigh:         2,
-      //                     mieCoefficient:   0.02,
-      //                     mieDirectionalG:  0.8,
-      //                     luminance:        1,
-      //                     inclination:      0.36, // elevation / inclination
-      //                     azimuth:          0.28, // Facing front,
-      //                     sun:              true },
-      //     theta       = Math.PI * ( opts.inclination - 0.5 ),
-      //     phi         = 2 * Math.PI * ( opts.azimuth - 0.5 ),
-      //     distance    = 400000,
-      //     position    = new Vector3()
-
-      // position.x = distance * Math.cos( phi )
-      // position.y = distance * Math.sin( phi ) * Math.sin( theta )
-      // position.z = distance * Math.sin( phi ) * Math.cos( theta )
-      // skyShader.uniforms.sunPosition.value.copy(  position )
-      // skyShader.uniforms.turbidity.value        = opts.turbidity
-      // skyShader.uniforms.rayleigh.value         = opts.rayleigh
-      // skyShader.uniforms.luminance.value        = opts.luminance
-      // skyShader.uniforms.mieCoefficient.value   = opts.mieCoefficient
-      // skyShader.uniforms.mieDirectionalG.value  = opts.mieDirectionalG
 
       // Scene
       // ————————————————
-       let {scene, 
-            camera, 
-            controls}     = sςene.final(dimensions, clearColor, config.useControls),
-          {sky, sun}      = _initSky(scene),
+      let ratio           = dimensions.width / dimensions.height,
+          scene           = new Scene(),
+          camera          = new PerspectiveCamera(100, ratio, 2, 2000000),
+          helper          = new GridHelper( 10000, 2, 0xffffff, 0xffffff ),
+          controls,
+
+          skyScene        = new Scene(),
+          skyCamera       = new OrthographicCamera( dimensions.width  / -2, 
+                                                    dimensions.width  /  2, 
+                                                    dimensions.height /  2, 
+                                                    dimensions.height / -2, 
+                                                    -10000, 10000 ),
+
+          {sky, sun}      = _initSky(scene, skyScene),
+
           geometryTerrain = new PlaneBufferGeometry( 6000, 6000, resolution.width, resolution.height ),
           terrain         = new Mesh( geometryTerrain,  terrainMaterial),
+
           icoGeometry     = new IcosahedronGeometry( 420, 2 ),
-          icosahedron     = new Mesh(icoGeometry , phongMaterial)
+          icosahedron     = new Mesh(icoGeometry , textureMaterial)
+
+
+      if(config.useControls) {
+        controls = new OrbitControls( camera )
+        controls.target.set( 0, 0, 0 )
+        controls.rotateSpeed  = 1.0
+        controls.zoomSpeed    = 1.2
+        controls.panSpeed     = 0.8
+        controls.keys         = [ 65, 83, 68 ] }
+
+      
+      scene.fog = new Fog( 0x050505, 2000, 4000 )
+      // scene.fog.color = color
+    
+      camera.position.set( -1200, 1020, 2000 )
+      camera.lookAt( new Vector3(0, 0, -800) )
+      
 
       // initialize the GUI
       gμi(sky, sun)
 
-      console.log('sky', sky)
-
       BufferGeometryUtils.computeTangents( geometryTerrain )
-      // BufferGeometryUtils.computeTangents( icoGeometry )
 
-      terrain.rotation.x  = _degrees(-90)
+      terrain.rotation.x = _degrees(-90)
       terrain.position.set(0, -240, 0 )
 
-      renderer.setClearColor( clearColor )
+      scene.add( camera )
+      scene.add( helper )
       scene.add( terrain )
-      // scene.add( icosahedron )
 
-      // create pointlight that that circles around the scene
-      let pivotPoint    = new Object3D(),
-          pointLight    = new PointLight( 0xffffff, lightIntensity ),
-          dirLight      = new DirectionalLight( 0xffffff, lightIntensity )
+      skyScene.add( camera )
 
-      pivotPoint.rotation.y = _degrees(120)
-      pointLight.position.set( 1600, 420, 0 )
-      pointLight.lookAt( 0, 0, 0 )
+      // // create pointlight that that circles around the scene
+      // let pivotPoint    = new Object3D(),
+      //     pointLight    = new PointLight( 0xffffff, lightIntensity ),
+      //     dirLight      = new DirectionalLight( 0xffffff, lightIntensity )
 
-      dirLight.position.set( -1600, 420, 0 )
-      dirLight.lookAt( 0, 0, 0 )
+      // pivotPoint.rotation.y = _degrees(120)
+      // pointLight.position.set( 1600, 420, 0 )
+      // pointLight.lookAt( 0, 0, 0 )
+
+      // dirLight.position.set( -1600, 420, 0 )
+      // dirLight.lookAt( 0, 0, 0 )
 
       // scene.add(pivotPoint)
       // pivotPoint.add(pointLight)
       // pivotPoint.add(dirLight)
 
-      // Compose
-      // ————————————————————————————————
-      let renderTarget  = new WebGLRenderTarget( dimensions.width, dimensions.height, renderTargetParameters ),
-          composition   = new EffectComposer( renderer, renderTarget ),
-          bgPass        = new RenderPass( scene, camera ),
-          fgPass        = new RenderPass( scene, camera ),
-          bgTarget      = new WebGLRenderTarget(resolution.width, resolution.height, renderTargetParameters),
-          savePass      = new SavePass( bgTarget )
-    
-      terrain.visible = false
-      composition.addPass( bgPass )
-      composition.addPass( savePass )
-      // terrain.visible = true
-      composition.addPass( fgPass )
 
-      bgPass.renderToScreen = true
-      // fgPass.renderToScreen = true
-
-      let clock     = new Clock(),
-          buffered  = false,
-          fLow      = 0.1, 
-          fHigh     = 0.8,
-          valNorm, δ
-
-      console.log('here we go —→')
-
+      // perpare a seperate renderer used for rendering the sky only
       let textureResolution   = {width: 128, height: 128},
           textureRenderer     = new WebGLRenderer(),
           textureTarget       = new WebGLRenderTarget(textureResolution.width, 
                                                       textureResolution.height,
                                                       renderTargetParameters ),
           textureComposition  = new EffectComposer( textureRenderer, textureTarget ),
-          texturedPass        = new ShaderPass( sky.mesh.material )
-          // texturedPass        = new TexturePass( textures.heightmap )
-          // texturedPass        = new TexturePass( bgTarget.texture )
+          texturedPass        = new TexturePass( textures.heightmap )
 
       document.getElementById('sky-texture').appendChild(textureRenderer.domElement)
       textureRenderer.setPixelRatio( window.devicePixelRatio )
       textureRenderer.setSize( textureResolution.width, textureResolution.height )
-      textureComposition.addPass( texturedPass )
-      texturedPass.renderToScreen = true
 
+      // Compose
+      // ————————————————————————————————
+      let renderTarget  = new WebGLRenderTarget( dimensions.width, dimensions.height, renderTargetParameters ),
+          composition   = new EffectComposer( renderer, renderTarget ),
+          skyPass       = new RenderPass( skyScene, camera ),
+          scenePass     = new RenderPass( scene, camera )
+    
+      textureComposition.addPass( skyPass )
+      skyPass.renderToScreen = true
+
+      composition.addPass( scenePass )
+      scenePass.renderToScreen = true
+
+      
       let gl      = textureRenderer.context,
-          pixels  = new Uint8Array(gl.drawingBufferWidth * gl.drawingBufferHeight/2 * 3),
-          color   = new Color()
-      console.log('texturedPass', texturedPass)
+          pixels  = new Uint8Array(gl.drawingBufferWidth * gl.drawingBufferHeight/2 * 3)
 
       function _getPixels() {
         gl.readPixels(0, 0, gl.drawingBufferWidth, gl.drawingBufferHeight/2, gl.RGB, gl.UNSIGNED_BYTE, pixels)
@@ -318,8 +323,15 @@ function drei(domId) {
         color.r = c.r
         color.g = c.g
         color.b = c.b
-        scene.fog.color = color
-      }
+        scene.fog.color = color }
+
+      let clock     = new Clock(),
+          buffered  = false,
+          fLow      = 0.1, 
+          fHigh     = 0.8,
+          valNorm, δ
+
+      console.log('here we go —→')
 
       // Render
       // ————————————————————————————————
@@ -343,11 +355,8 @@ function drei(domId) {
           buffered = true }
 
         composition.render(δ) 
-        texturedPass.texture = bgTarget.texture
-        // textureRenderer.setClearColor( 0x000000 )
         textureComposition.render(δ) 
-
-        _getPixels()
+        // _getPixels()
       }
       
       _render() // here we go…
