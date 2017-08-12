@@ -17,7 +17,7 @@ let position = [
     'vec3 velocity = texture2D( textureVelocity, uv ).xyz;',
     'float phase = tmpPos.w;',
     'phase = mod( ( phase + delta +',
-    'length( velocity.xz ) * delta * 3. +',
+    'length( velocity.xz ) * delta * .5 +',
     'max( velocity.y, 0.0 ) * delta * 6. ), 62.83 );',
     'gl_FragColor = vec4( position + velocity * delta * 15. , phase );',
   '}'].join( "\n" )
@@ -134,16 +134,24 @@ let bird = {
                 'delta':            { value: 0 },
                 'texturePosition':  { value: null, type: 't' },
                 'textureVelocity':  { value: null, type: 't' },
-                'color':            { value: new Color( 0xff2200) }}]),
+                'diffuse':          { value: new Color( 0xffffff) },
+                'specular':         { value: new Color( 0xffffff) },
+                'shininess':        { value: 30 }
+              }]),
+  
   vertexShader: [
   'attribute vec2 reference;',
   'attribute float birdVertex;',
-  'attribute vec3 birdColor;',
+  // 'attribute vec3 birdColor;',
+
+  'uniform vec3 diffuse;',
+  'uniform vec3 specular;',
+
   'uniform sampler2D texturePosition;',
   'uniform sampler2D textureVelocity;',
   'uniform float time;',
 
-  'varying vec4 vColor;',
+  'varying vec3 vNormal;',
   'varying float z;',
   'varying vec3 vViewPosition;',
   
@@ -151,28 +159,32 @@ let bird = {
   ShaderChunk[ 'fog_pars_vertex' ],
   
   'void main() {',
+    // the w coordinate of tmpPos contains the phase (used for wing flapping)
     'vec4 tmpPos = texture2D( texturePosition, reference );',
     'vec3 pos = tmpPos.xyz;',
     'vec3 velocity = normalize(texture2D( textureVelocity, reference ).xyz);',
     'vec3 newPosition = position;',
-    
+
+    // flap the wings    
+    // birdVertex is the index of the vertex within the bird gemoetry
+    // index 4 and 7 are the outer tips of the wings
     'if ( birdVertex == 4.0 || birdVertex == 7.0 ) {',
-      '// flap wings',
-      'newPosition.y = sin( tmpPos.w ) * 5.;',
-    '}',
-    
+      'newPosition.y = sin( tmpPos.w ) * 5.; }',
+
+    // questionable
     'vViewPosition = -mat3( modelViewMatrix ) * newPosition;',
 
-    'newPosition = mat3( modelMatrix ) * newPosition;',
+    'newPosition  = mat3( modelMatrix ) * newPosition;',
+    'vec3 norm    = mat3( modelMatrix ) * vec3(0.0, 1.0, 0.0);',
     
-    'velocity.z *= -1.;',
-    'float xz = length( velocity.xz );',
-    'float xyz = 1.;',
-    'float x = sqrt( 1. - velocity.y * velocity.y );',
-    'float cosry = velocity.x / xz;',
-    'float sinry = velocity.z / xz;',
-    'float cosrz = x / xyz;',
-    'float sinrz = velocity.y / xyz;',
+    'velocity.z   *= -1.;',
+    'float xz     = length( velocity.xz );',
+    'float xyz    = 1.;',
+    'float x      = sqrt( 1. - velocity.y * velocity.y );',
+    'float cosry  = velocity.x / xz;',
+    'float sinry  = velocity.z / xz;',
+    'float cosrz  = x / xyz;',
+    'float sinrz  = velocity.y / xyz;',
     'mat3 maty =  mat3(',
       'cosry, 0, -sinry,',
       '0    , 1, 0     ,',
@@ -187,19 +199,19 @@ let bird = {
     'newPosition += pos;',
     
     'z = newPosition.z;',
-    'vColor = vec4( birdColor, 1.0 );',
-
-    // 'vViewPosition = -mvPosition.xyz;',
+    'vNormal = maty * matz * norm;',
 
     'gl_Position = projectionMatrix *  viewMatrix  * vec4( newPosition, 1.0 );',
   '}'].join( "\n" ),
 
   fragmentShader: [
-  'varying vec4 vColor;',
   'varying float z;',
   'varying vec3 vViewPosition;',
+  'varying vec3 vNormal;',
 
-  'uniform vec3 color;',
+  'uniform vec3 diffuse;',
+  'uniform vec3 specular;',
+  'uniform float shininess;',
 
   ShaderChunk[ 'common' ],
   ShaderChunk[ 'bsdfs' ],
@@ -217,15 +229,12 @@ let bird = {
   'void main() {',
     // outgoing light does not have an alpha, the surface does
     'vec3 outgoingLight = vec3( 0.0 );',
-    'vec4 diffuseColor  = vColor;',
+    'vec4 diffuseColor  = vec4(diffuse, 1.0);',
     'vec3 viewPosition  = normalize( vViewPosition );',
 
-    // "vec3 finalNormal   = vNormal;",
-    // "vec3 normal        = normalize( finalNormal );",
-
+    "vec3 normal = normalize( vNormal );",
     'vec3 totalDiffuseLight  = vec3( 0.0 );',
     'vec3 totalSpecularLight = vec3( 0.0 );',
-
 
     // point lights
     // "#if NUM_POINT_LIGHTS > 0",
@@ -247,16 +256,17 @@ let bird = {
     "#if NUM_DIR_LIGHTS > 0",
       "vec3 dirDiffuse = vec3( 0.0 );",
       "vec3 dirSpecular = vec3( 0.0 );",
-      // "for( int i = 0; i < NUM_DIR_LIGHTS; i++ ) {",
-      //   "vec3 dirVector = directionalLights[ i ].direction;",
-      //   "float dirDiffuseWeight = max( dot( normal, dirVector ), 0.0 );",
+      "for( int i = 0; i < NUM_DIR_LIGHTS; i++ ) {",
+        "vec3 dirVector = directionalLights[ i ].direction;",
+        "float dirDiffuseWeight = max( dot( normal, dirVector ), 0.0 );",
 
-      //   "vec3 dirHalfVector = normalize( dirVector + viewPosition );",
-      //   "float dirDotNormalHalf = max( dot( normal, dirHalfVector ), 0.0 );",
-      //   "totalDiffuseLight += directionalLights[ i ].color * dirDiffuseWeight;",
-      //   "float dirSpecularWeight = specularTex.r * max( pow( dirDotNormalHalf, shininess ), 0.0 );",
-      //   "totalSpecularLight += directionalLights[ i ].color * specular * dirSpecularWeight * dirDiffuseWeight;",
-      // "}",
+        "vec3 dirHalfVector = normalize( dirVector + viewPosition );",
+        "float dirDotNormalHalf = max( dot( normal, dirHalfVector ), 0.0 );",
+        "totalDiffuseLight += directionalLights[ i ].color * dirDiffuseWeight;",
+        "float dirSpecularWeight =  max( pow( dirDotNormalHalf, shininess ), 0.0 );",
+        "totalSpecularLight += directionalLights[ i ].color * specular * dirSpecularWeight * dirDiffuseWeight;",
+        // "totalSpecularLight += 1.0;",
+      "}",
 
     "#endif",
 
@@ -287,11 +297,9 @@ let bird = {
     //     "totalSpecularLight += specular * mix( hemisphereLights[ i ].groundColor, hemisphereLights[ i ].skyColor, hemiDiffuseWeight ) * hemiSpecularWeight * hemiDiffuseWeight;}",
     // "#endif",
 
-  // '  // Fake colors for now',
-  // '  float z2 = 0.2 + ( 1000. - z ) / 1000. * vColor.x;',
-  // '  gl_FragColor = vec4( z2, z2, z2, 1. );',    
-
-    'gl_FragColor = diffuseColor;',   
+    // 'outgoingLight += vec3( 1.0, 1.0, 1.0 ) * ( totalDiffuseLight + totalSpecularLight );',
+    'outgoingLight += diffuse * ( totalDiffuseLight + totalSpecularLight );',
+    'gl_FragColor = vec4( outgoingLight, 1.0 );',
     ShaderChunk[ 'fog_fragment' ], 
 
   '}'].join( "\n" )

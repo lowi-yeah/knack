@@ -38,6 +38,7 @@ import {AmbientLight,
         SmoothShading,
         SphereBufferGeometry,
         SphereGeometry,
+        Spherical,
         SpotLight,
         TextGeometry,
         TextureLoader,
@@ -67,18 +68,17 @@ import BirdΣ                  from './shader/birds'
 import BirdGeometry           from './lib/bird-geometry' 
 import initGui                from './drei/gui' 
 
-
-
-
 let config  = { wireframe:    false,
                 useControls:  true,
+                lookAtSun:    false,
+                cameraRadius: 400,
                 sky: {turbidity:        [10, 1, 20, 0.1],
                       rayleigh:         [1, 0, 4, 0.001],
                       mieCoefficient:   [0.02, 0, 0.1, 0.001],
                       mieDirectionalG:  [0.8, 0, 1, 0.001],
                       luminance:        [1, 0, 2, 0.001],
-                      inclination:      [0.50, 0, 0.6, 0.0001],   // elevation / inclination
-                      azimuth:          [0.25, 0, 1, 0.0001],  // Facing front,
+                      inclination:      [0.50, 0.0001, 0.6, 0.0001],   // elevation / inclination
+                      azimuth:          [0.25, 0, 1, 0.0001, false],  // Facing front,
                       distance:         [4000, false],
                       sun:              [true, false] },
 
@@ -103,9 +103,15 @@ let DEBUG                   = true,
     windowHalfY             = dimensions.height / 2,
     BOUNDS                  = 800, 
     BOUNDS_HALF             = BOUNDS / 2,
-    computeTextureSize      = 16
+    computeTextureSize      = 8
 
 function _degrees(δ) {return ThreeMath.DEG2RAD * δ}
+
+function _sphericalToCartesian(spherical) {
+  let x = spherical.radius * Math.sin(spherical.theta) * Math.cos(-spherical.phi),
+      y = spherical.radius * Math.sin(spherical.theta) * Math.sin(-spherical.phi),
+      z = spherical.radius * Math.cos(spherical.theta)
+  return new Vector3(x, y, z) }
 
 function _fillPositionTexture( texture ) {
   var theArray = texture.image.data;
@@ -139,11 +145,6 @@ function _initComputeRenderer(renderer) {
 
   _fillPositionTexture( dtPosition )
   _fillVelocityTexture( dtVelocity )
-
-  // console.log('dtPosition', dtPosition)
-  // console.log('dtVelocity', dtVelocity, dtVelocity.image.data)
-  // console.log('BirdΣ.position', BirdΣ.position)
-  // console.log('BirdΣ.velocity', BirdΣ.velocity)
 
   let velocityVariable  = gpuCompute.addVariable( 'textureVelocity', 
                             BirdΣ.velocity, dtVelocity ),
@@ -188,10 +189,13 @@ function _intitBirds() {
       material  = new ShaderMaterial( shader ),
       mesh      = new Mesh( geometry, material )
 
-  shader.uniforms.color.value   = new Color(0xFFA051)
+  shader.uniforms.diffuse.value   = new Color(0xffffff)
+  shader.uniforms.specular.value  = new Color(0xffffff)
+  shader.uniforms.shininess.value = 100
   return {shader, mesh} }
 
 function _updateSky(state, skyShader, sun) {
+
   let theta = Math.PI * ( state.sky.inclination - 0.5 ),
       phi   = 2 * Math.PI * ( state.sky.azimuth - 0.5 )
   
@@ -205,7 +209,11 @@ function _updateSky(state, skyShader, sun) {
   sun.position.y = state.sky.distance * Math.sin( phi ) * Math.sin( theta )
   sun.position.z = state.sky.distance * Math.sin( phi ) * Math.cos( theta )
   sun.lookAt(new Vector3())
-  skyShader.uniforms.sunPosition.value.copy( sun.position ) }
+  skyShader.uniforms.sunPosition.value.copy( sun.position ) 
+
+  state.camera.hasChanged = true
+  state.camera.spherical.phi = phi
+  state.camera.spherical.theta = theta }
 
 function _updateBirdConfig(state, velocityUniforms) {
   velocityUniforms.seperationDistance.value = state.birds.seperation
@@ -229,9 +237,8 @@ function drei(domId) {
       controls
       
   scene.fog = new Fog( 0xffffff, 100, 1000 )
-  camera.position.set(0, 0, 400)
-  camera.lookAt(new Vector3())
-  scene.add( helper )
+  camera.position.set(0, 0, config.cameraRadius)
+  // scene.add( helper )
 
   // Renderer
   // ————————————————————————————
@@ -265,7 +272,7 @@ function drei(domId) {
                                             wireframe:  false}),
       icoGeometry = new IcosahedronGeometry( 64, 1 ),
       icosahedron = new Mesh(icoGeometry , icoMaterial)
-  scene.add(icosahedron)
+  // scene.add(icosahedron)
   
   // Birds
   // ————————————————————————————
@@ -288,7 +295,8 @@ function drei(domId) {
             open: false}}
 
   state = initGui( guiConfig )
-  
+  state.camera = {spherical: new Spherical(config.cameraRadius, 0, 0),
+                  hasChanged: true }
   _updateBirdConfig(state, velocityUniforms)
   _updateSky(state, skyShader, sunLight)
 
@@ -368,6 +376,16 @@ function drei(domId) {
 
     bird.shader.uniforms.texturePosition.value = gpuCompute.getCurrentRenderTarget( positionVariable ).texture
     bird.shader.uniforms.textureVelocity.value = gpuCompute.getCurrentRenderTarget( velocityVariable ).texture
+
+    if(config.lookAtSun)    
+      camera.lookAt(sunLight.position)
+
+    if(state.camera.hasChanged) {
+      let v = _sphericalToCartesian(state.camera.spherical)
+      camera.position.set(v.x, v.y, v.z)
+      state.camera.hasChanged = false
+    }    
+      
 
     renderer.render(scene, camera)
     // textMesh.rotation.y += 0.1 * δ
