@@ -41,6 +41,7 @@ import {BoxGeometry,
 
 import {BloomPass,
         ClearPass,
+        DepthPass,
         DotScreenPass,
         EffectComposer, 
         FilmPass,
@@ -71,7 +72,7 @@ let DEBUG                   = true,
     renderTargetParameters  = { minFilter: LinearFilter, 
                                 magFilter: LinearFilter, 
                                 format: RGBAFormat, 
-                                stencilBufer: false },
+                                stencilBufer: true },
     lightIntensity          = 1.0
 
 let clearColor = new Color()
@@ -88,7 +89,6 @@ function _initSky(scene, skyScene) {
   
   let σ = new Mesh( sky.geometry, sky.material ),
       ς = new Mesh( sky.geometry, sky.material )
-
   scene.add( sun )
   scene.add( σ )
   skyScene.add( ς )
@@ -100,7 +100,10 @@ function _loadTextures() {
         tl              = new TextureLoader( loadingManager ),
         // heightmap       = tl.load( '/textures/gradient.jpg')
         // heightmap       = tl.load( '/textures/europa.jpg')
-        heightmap       = tl.load( '/textures/alpenvorland.png')
+        // heightmap       = tl.load( '/textures/alpenvorland.png')
+        // heightmap       = tl.load( '/textures/fuji.png')
+        // heightmap       = tl.load( '/textures/alpenvorland_flattened.png')
+        heightmap       = tl.load( '/textures/noise.png')
         // heightmap       = tl.load( '/textures/alpenvorland-detail.png')
     loadingManager.onLoad   = () => { resolve({heightmap})}
     loadingManager.onError  = (url) => { reject('There was an error loading ' + url)}})}
@@ -109,7 +112,6 @@ function drei(domId) {
   console.log('initialzing drei')
 
   _loadTextures()
-
     .then((textures) => {
       // Render the given heightmap 
       // once as is and once with a normal-map shader apllied.
@@ -179,7 +181,7 @@ function drei(domId) {
                                 lights:         true,
                                 fog:            true,
                                 // shading:        FlatShading,
-                                wireframe:      true },
+                                wireframe:      false },
           terrainMaterial   = new ShaderMaterial(terrainShader),
          
           textureShader     = { uniforms:       UniformsUtils.clone( textureΣ.uniforms ),
@@ -199,7 +201,7 @@ function drei(domId) {
       // textureShader.uniforms.tDiffuse.value = maps.normal.texture
       terrainShader.uniforms.tNormal.value            = maps.normal.texture
       terrainShader.uniforms.tDisplacement.value      = maps.height.texture
-      terrainShader.uniforms.uDisplacementScale.value = 180
+      terrainShader.uniforms.uDisplacementScale.value = 240
 
       terrainShader.uniforms.uBaseColor.value.setHex(   0xffffff )
       terrainShader.uniforms.specular.value.setHex(     0xffffff )
@@ -215,16 +217,17 @@ function drei(domId) {
       // Scene
       // ————————————————
       let ratio           = dimensions.width / dimensions.height,
-          scene           = new Scene(),
+          bgScene         = new Scene(),
+          fgScene         = new Scene(),
           camera          = new PerspectiveCamera(40, ratio, 2, 2000000),
           helper          = new GridHelper( 10000, 2, 0xffffff, 0xffffff ),
           controls,
 
           skyScene        = new Scene(),
 
-          {sky, sun}      = _initSky(scene, skyScene),
+          {sky, sun}      = _initSky(fgScene, skyScene),
 
-          geometryTerrain = new PlaneBufferGeometry( 6000, 6000, resolution.width, resolution.height ),
+          geometryTerrain = new PlaneBufferGeometry( 6000, 6000, resolution.width/4, resolution.height/4 ),
           terrain         = new Mesh( geometryTerrain,  terrainMaterial),
 
           icoGeometry     = new IcosahedronBufferGeometry( 1200, 4 ),
@@ -240,11 +243,11 @@ function drei(domId) {
         controls.keys         = [ 65, 83, 68 ] }
 
       
-      scene.fog = new Fog( 0x050505, 2000, 4000 )
-      // scene.fog.color = color
+      fgScene.fog = new Fog( 0x050505, 2000, 4000 )
+      // fgScene.fog.color = color
     
       camera.position.set( -1200, 1020, 2000 )
-      camera.lookAt( new Vector3(0, 0, -800) )
+      camera.lookAt( new Vector3(0, 0, -18000) )
       
 
       // initialize the GUI
@@ -257,29 +260,13 @@ function drei(domId) {
       terrain.rotation.z = _degrees(180)
       terrain.position.set(0, -240, 0 )
 
-      scene.add( camera )
-      // scene.add( helper )
-      scene.add( terrain )
-      // scene.add( icosahedron )
+      // fgScene.add( camera )
+      
+      fgScene.add( terrain )
+      // fgScene.add( helper )
+      // fgScene.add( icosahedron )
 
-      skyScene.add( camera )
-
-      // // create pointlight that that circles around the scene
-      // let pivotPoint    = new Object3D(),
-      //     pointLight    = new PointLight( 0xffffff, lightIntensity ),
-      //     dirLight      = new DirectionalLight( 0xffffff, lightIntensity )
-
-      // pivotPoint.rotation.y = _degrees(120)
-      // pointLight.position.set( 1600, 420, 0 )
-      // pointLight.lookAt( 0, 0, 0 )
-
-      // dirLight.position.set( -1600, 420, 0 )
-      // dirLight.lookAt( 0, 0, 0 )
-
-      // scene.add(pivotPoint)
-      // pivotPoint.add(pointLight)
-      // pivotPoint.add(dirLight)
-
+      // skyScene.add( camera )
 
       // perpare a seperate renderer used for rendering the sky only
       let textureResolution   = {width: 64, height: 64},
@@ -300,16 +287,26 @@ function drei(domId) {
       let renderTarget  = new WebGLRenderTarget( dimensions.width, dimensions.height, renderTargetParameters ),
           composition   = new EffectComposer( renderer, renderTarget ),
           skyPass       = new RenderPass( skyScene, camera ),
-          scenePass     = new RenderPass( scene, camera ),
+          bgPass        = new RenderPass( bgScene, camera ),
+          fgPass        = new RenderPass( fgScene, camera ),
+          depthPass     = new DepthPass(camera),
+          
           bloomPass     = new BloomPass(),
           filmPass      = new FilmPass({vignette: false})
     
       textureComposition.addPass( skyPass )
       skyPass.renderToScreen = true
 
-      composition.addPass( scenePass )
+      // composition.addPass( bgPass )
+      composition.addPass( fgPass )
+      composition.addPass( depthPass )
       // composition.addPass( filmPass )
-      scenePass.renderToScreen = true
+
+      // bgPass.renderToScreen = true
+      fgPass.renderToScreen = true
+      // depthPass.renderToScreen = true
+      // depthPass.renderToScreen = true
+      
       // filmPass.renderTo Screen = true
       
       let numRows   = 3,
@@ -375,13 +372,14 @@ function drei(domId) {
         sun.position.z = distance * Math.sin( φ ) * Math.cos( ϑ )
         sky.uniforms.sunPosition.value.copy( sun.position ) 
 
-        scene.fog.color = fogColor 
+        fgScene.fog.color = fogColor 
+        sun.color         = fogColor 
         fogColor.getHSL(hsl)
-        sun.color = fogColor 
+        
         // terrainShader.uniforms.ambientLight.value = fogColor 
 
 
-        // terrainShader.uniforms.uBaseColor.value  = c0.setHSL(hsl.h, hsl.s, 0.12)
+        terrainShader.uniforms.uBaseColor.value  = c0.setHSL(hsl.h, hsl.s, 0.91)
         // terrainShader.uniforms.uLineColor1.value = c1.setHSL(hsl.h, hsl.s, 0.33)
         // terrainShader.uniforms.uLineColor2.value = c2.setHSL(hsl.h, hsl.s, 5)
         // terrainShader.uniforms.uLineColor3.value = c3.setHSL(hsl.h, hsl.s, 0.66)
@@ -400,7 +398,8 @@ function drei(domId) {
           bufferComposition.render( δ )
           renderer.setClearColor( clearColor )
           buffered = true }
-
+        
+        renderer.setClearColor( 0xffffff )
         composition.render(δ) 
         textureComposition.render(δ) 
         _getPixels()

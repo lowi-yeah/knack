@@ -162,27 +162,27 @@ let ShaderTerrain = {
 
 
       // "outgoingLight = ( totalDiffuseLight + ambientLight + totalSpecularLight );",
-      "outgoingLight = totalDiffuseLight + (0.32 * ambientLight);",
-      // "outgoingColor = vec3( length(outgoingLight) );",
+      "outgoingLight = totalDiffuseLight;",
       "outgoingColor = diffuseColor.xyz * outgoingLight;",
       // "outgoingColor = diffuseColor.xyz;",
 
-      // "if ( length(outgoingLight) > 0.08 ) {",
-      //   "outgoingColor = uLineColor1;",
+      // weiche Schattierung berechnen
+      // "float celShading = 1.0;",
+
+      // "if ( length(outgoingLight) < 0.5 ) {",
+      //   "celShading = 0.75;",
       // "}",
 
-      // "if ( length(outgoingLight) > 0.32 ) {",
-      //   "outgoingColor = uLineColor2;",
+      // "if ( length(outgoingLight) < 0.25 ) {",
+      //   "celShading = 0.5;",
       // "}",
 
-      // "if ( length(outgoingLight) > 0.50 ) {",
-      //   "outgoingColor = uLineColor3;",
+      // "if ( length(outgoingLight) < 0.1 ) {",
+      //   "celShading = 0.08;",
       // "}",
+      // "outgoingColor = diffuseColor.xyz * celShading ;",
 
-      // "if ( length(outgoingLight) > 0.64 ) {",
-      //   "outgoingColor = uLineColor4;",
-      // "}",
-
+      
       "gl_FragColor = vec4( outgoingColor, diffuseColor.a );",
 
       ShaderChunk[ "fog_fragment" ],

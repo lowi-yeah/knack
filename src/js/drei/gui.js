@@ -1,43 +1,38 @@
 import { Vector3 } from 'three'
 
-let gui = function(sky, sun) {
-  let effectController  = { turbidity:        20,
-                            rayleigh:         1,
-                            mieCoefficient:   0.02,
-                            mieDirectionalG:  0.8,
-                            luminance:        1,
-                            inclination:      0.18, // elevation / inclination
-                            azimuth:          0.28, // Facing front,
-                            sun:              true },
-      distance          = 400000,
-      gui               = new dat.GUI()
+let DEFAULT = 0,
+    MIN     = 1,
+    MAX     = 2,
+    STEP    = 3
 
-  function guiChanged() {
-      let theta = Math.PI * ( effectController.inclination - 0.5 ),
-          phi   = 2 * Math.PI * ( effectController.azimuth - 0.5 )
+function _data(items) {
+  return _.reduce(items, (r, v, k) => {
+    r[k] = v[DEFAULT]
+    return r }, {})}
 
-      sky.uniforms.turbidity.value        = effectController.turbidity
-      sky.uniforms.rayleigh.value         = effectController.rayleigh
-      sky.uniforms.luminance.value        = effectController.luminance
-      sky.uniforms.mieCoefficient.value   = effectController.mieCoefficient
-      sky.uniforms.mieDirectionalG.value  = effectController.mieDirectionalG
+let makeGui = function(config) {
 
-      sun.position.x = distance * Math.cos( phi )
-      sun.position.y = distance * Math.sin( phi ) * Math.sin( theta )
-      sun.position.z = distance * Math.sin( phi ) * Math.cos( theta )
-      sun.lookAt(      new Vector3())
-      sun.visible    = effectController.sun
-      sky.uniforms.sunPosition.value.copy( sun.position ) }
+    let gui         = new dat.GUI(),
+        dataObjects = {}
 
-    gui.add( effectController, 'turbidity', 1.0, 20.0, 0.1 ).onChange( guiChanged )
-    gui.add( effectController, 'rayleigh', 0.0, 4, 0.001 ).onChange( guiChanged )
-    gui.add( effectController, 'mieCoefficient', 0.0, 0.1, 0.001 ).onChange( guiChanged )
-    gui.add( effectController, 'mieDirectionalG', 0.0, 1, 0.001 ).onChange( guiChanged )
-    gui.add( effectController, 'luminance', 0.0, 2 ).onChange( guiChanged )
-    gui.add( effectController, 'inclination', 0, 1, 0.0001 ).onChange( guiChanged )
-    gui.add( effectController, 'azimuth', 0, 1, 0.0001 ).onChange( guiChanged )
-    gui.add( effectController, 'sun' ).onChange( guiChanged )
+    _.each(config, (conf, section) => {
+      let folder  = gui.addFolder(section),
+          data    = _data(conf.items)
 
-    guiChanged() }
+      dataObjects[section] = data
 
-export default gui
+      _.each(conf.items, (value, key) => {
+        // if the last entry of the item value array is false, 
+        // the item won't get rendered
+        let last = _.last(value)
+        if(!_.isNumber(last) && !last) return
+
+        let controller = folder.add(data, key)
+        if(_.isNumber(value[MIN]))  controller = controller.min(value[MIN])
+        if(_.isNumber(value[MAX]))  controller = controller.max(value[MAX])
+        if(_.isNumber(value[STEP])) controller = controller.step(value[STEP])
+        controller.onChange( conf.onChange) })
+      if(conf.open) folder.open() })
+    return dataObjects}
+
+export default makeGui
