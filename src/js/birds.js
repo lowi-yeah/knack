@@ -103,7 +103,7 @@ let DEBUG                   = true,
     windowHalfY             = dimensions.height / 2,
     BOUNDS                  = 800, 
     BOUNDS_HALF             = BOUNDS / 2,
-    computeTextureSize      = 32
+    computeTextureSize      = 16
 
 function _degrees(δ) {return ThreeMath.DEG2RAD * δ}
 
@@ -182,9 +182,13 @@ function _intitBirds() {
       shader    = { uniforms: UniformsUtils.clone( BirdΣ.bird.uniforms ),
                     vertexShader:   BirdΣ.bird.vertexShader,
                     fragmentShader: BirdΣ.bird.fragmentShader,
-                    side: DoubleSide},
+                    side: DoubleSide,
+                    lights: true,
+                    fog: true},
       material  = new ShaderMaterial( shader ),
       mesh      = new Mesh( geometry, material )
+
+  shader.uniforms.color.value   = new Color(0xFFA051)
   return {shader, mesh} }
 
 function _updateSky(state, skyShader, sun) {
@@ -210,7 +214,6 @@ function _updateBirdConfig(state, velocityUniforms) {
   velocityUniforms.freedomFactor.value      = state.birds.freedom }
 
 function drei(domId) {
-  console.log('initialzing drei')
 
   // State
   // ————————————————————————————
@@ -248,16 +251,18 @@ function drei(domId) {
   
   // Sky
   // ————————————————————————————
-  let sunLight  = new SpotLight(0xffffff),
+  let sunLight  = new DirectionalLight(0xffffff),
       skyShader = new SkyΣ(),
       skyMesh   = new Mesh( skyShader.geometry, skyShader.material )
   scene.add( sunLight )
   scene.add(skyMesh)
 
+  // Icosahedron
+  // ————————————————————————————
   let icoMaterial = new MeshPhongMaterial({ color:      0xE8873B, 
                                             shading:    FlatShading,
                                             shininess:  8,
-                                            wireframe:  true}),
+                                            wireframe:  false}),
       icoGeometry = new IcosahedronGeometry( 64, 1 ),
       icosahedron = new Mesh(icoGeometry , icoMaterial)
   scene.add(icosahedron)
@@ -280,12 +285,9 @@ function drei(domId) {
             open: false},
     birds: { items: config.birds,
             onChange: () => {_updateBirdConfig(state, velocityUniforms)},
-            open: true}
-          }
+            open: false}}
 
   state = initGui( guiConfig )
-
-  console.log('state:', state)
   
   _updateBirdConfig(state, velocityUniforms)
   _updateSky(state, skyShader, sunLight)
@@ -364,8 +366,8 @@ function drei(domId) {
 
     gpuCompute.compute()
 
-    bird.shader.uniforms.texturePosition.value = gpuCompute.getCurrentRenderTarget( positionVariable ).texture;
-    bird.shader.uniforms.textureVelocity.value = gpuCompute.getCurrentRenderTarget( velocityVariable ).texture;
+    bird.shader.uniforms.texturePosition.value = gpuCompute.getCurrentRenderTarget( positionVariable ).texture
+    bird.shader.uniforms.textureVelocity.value = gpuCompute.getCurrentRenderTarget( velocityVariable ).texture
 
     renderer.render(scene, camera)
     // textMesh.rotation.y += 0.1 * δ
