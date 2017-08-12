@@ -678,7 +678,8 @@ let OrbitControls = function ( object, domElement ) {
 
       case scope.mouseButtons.ORBIT:
 
-        if ( scope.enableRotate === false ) return;
+        if ( !scope.enableRotate ) return;
+        if ( !event.altKey ) return;
 
         handleMouseDownRotate( event );
 
@@ -688,7 +689,7 @@ let OrbitControls = function ( object, domElement ) {
 
       case scope.mouseButtons.ZOOM:
 
-        if ( scope.enableZoom === false ) return;
+        if ( !scope.enableZoom ) return;
 
         handleMouseDownDolly( event );
 
@@ -698,7 +699,7 @@ let OrbitControls = function ( object, domElement ) {
 
       case scope.mouseButtons.PAN:
 
-        if ( scope.enablePan === false ) return;
+        if ( !scope.enablePan ) return;
 
         handleMouseDownPan( event );
 
