@@ -60,6 +60,7 @@ import {BloomPass,
         ShaderPass,
         TexturePass}          from 'postprocessing'
 
+import fontLoader             from './lib/font-loader'
 import ShaderExtras           from './lib/shader-extras'
 import OrbitControls          from './lib/orbit-controls'
 import GPUComputationRenderer from './lib/gpu-computation-renderer'
@@ -222,175 +223,191 @@ function _updateBirdConfig(state, velocityUniforms) {
   velocityUniforms.freedomFactor.value      = state.birds.freedom }
 
 function drei(domId) {
+  fontLoader('/fonts/HelveticaNeue-Medium.otf', {reverseTypeface: true})
+  .then((font) => {// State
+      // ————————————————————————————
+      // gets inititalized by gui
+      let state
 
-  // State
-  // ————————————————————————————
-  // gets inititalized by gui
-  let state
-
-  // Scene
-  // ————————————————————————————
-  let ratio     = dimensions.width / dimensions.height,
-      scene     = new Scene(),
-      camera    = new PerspectiveCamera(75, ratio, 2, 2000000),
-      helper    = new GridHelper( 10000, 2, 0x000000, 0x000000 ),
-      controls
-      
-  scene.fog = new Fog( 0xffffff, 100, 1000 )
-  camera.position.set(0, 0, config.cameraRadius)
-  // scene.add( helper )
-
-  // Renderer
-  // ————————————————————————————
-  let renderer = new WebGLRenderer()
-  document.getElementById(domId).appendChild(renderer.domElement)
-  renderer.setPixelRatio( window.devicePixelRatio )
-  renderer.setSize( dimensions.width, dimensions.height )
-  renderer.setClearColor( scene.fog.color )
-
-  if(config.useControls) {
-    controls  = new OrbitControls( camera )
-    controls.target.set( 0, 0, 0 )
-    controls.rotateSpeed  = 1.0
-    controls.zoomSpeed    = 1.2
-    controls.panSpeed     = 0.8
-    controls.keys         = [ 65, 83, 68 ] }
-  
-  // Sky
-  // ————————————————————————————
-  let sunLight  = new DirectionalLight(0xffffff),
-      skyShader = new SkyΣ(),
-      skyMesh   = new Mesh( skyShader.geometry, skyShader.material )
-  scene.add( sunLight )
-  scene.add(skyMesh)
-
-  // Icosahedron
-  // ————————————————————————————
-  let icoMaterial = new MeshPhongMaterial({ color:      0xE8873B, 
-                                            shading:    FlatShading,
-                                            shininess:  8,
-                                            wireframe:  false}),
-      icoGeometry = new IcosahedronGeometry( 64, 1 ),
-      icosahedron = new Mesh(icoGeometry , icoMaterial)
-  // scene.add(icosahedron)
-  
-  // Birds
-  // ————————————————————————————
-  let { gpuCompute, 
-        positionUniforms, 
-        velocityUniforms, 
-        velocityVariable, 
-        positionVariable} = _initComputeRenderer(renderer),
-      bird                = _intitBirds()
-  scene.add(bird.mesh)
-
-  // GUI
-  // ————————————————————————————
-  let guiConfig = { 
-    sky:  { items: config.sky,
-            onChange: () => {_updateSky(state, skyShader, sunLight)},
-            open: false},
-    birds: { items: config.birds,
-            onChange: () => {_updateBirdConfig(state, velocityUniforms)},
-            open: false}}
-
-  state = initGui( guiConfig )
-  state.camera = {spherical: new Spherical(config.cameraRadius, 0, 0),
-                  hasChanged: true }
-  _updateBirdConfig(state, velocityUniforms)
-  _updateSky(state, skyShader, sunLight)
-
-  // Event handlers
-  // ————————————————————————————————
-  document.addEventListener( 'mousemove', (event) => {
-                                mouseX = event.clientX - windowHalfX
-                                mouseY = event.clientY - windowHalfY }, false )
-  document.addEventListener( 'touchstart', (event) => {
-                                if ( event.touches.length === 1 ) {
-                                  event.preventDefault()
-                                  mouseX = event.touches[ 0 ].pageX - windowHalfX
-                                  mouseY = event.touches[ 0 ].pageY - windowHalfY }}, false)
-
-  document.addEventListener( 'touchmove', (event) => {
-                                if ( event.touches.length === 1 ) {
-                                  event.preventDefault()
-                                  mouseX = event.touches[ 0 ].pageX - windowHalfX
-                                  mouseY = event.touches[ 0 ].pageY - windowHalfY }}, false )
-
-  document.addEventListener( 'keydown', (event) => {
-                                if(event.key === 'Alt') 
-                                  document.getElementById('rotate-indicator')
-                                    .classList.add('active') }, false )
-
-  document.addEventListener( 'keyup', (event) => {
-                                if(event.key === 'Alt') 
-                                  document.getElementById('rotate-indicator')
-                                    .classList.remove('active') }, false )
-
-  // Compose
-  // ————————————————————————————————
-  // let renderTarget  = new WebGLRenderTarget( dimensions.width, dimensions.height ),
-  //     composition   = new EffectComposer( renderer, renderTarget ),
-  //     scenePass     = new RenderPass( scene, camera )
-  
-  // composition.addPass( scenePass )
-  // scenePass.renderToScreen = true
-  
-  let clock = new Clock(), δ,
-      last  = performance.now(),
-      now
-
-  console.log('here we go —→')
-
-  // Render
-  // ————————————————————————————————
-  function _render() {
-    // reschedule
-    requestAnimationFrame(_render) 
+      console.log('font', font)
     
-    // update controls
-    if( controls ) controls.update()
-
-    // timing
-    now = performance.now();
-    δ = (now - last) / 1000
-    if (δ > 1) δ = 1 // safety cap on large deltas
-    last = now
-
-    // update uniforms  
-    // position  
-    positionUniforms.time.value   = now
-    positionUniforms.delta.value  = δ
-    // velocity
-    velocityUniforms.time.value   = now
-    velocityUniforms.delta.value  = δ
-    // bird
-    bird.shader.uniforms.time.value = now
-    bird.shader.uniforms.delta.value = δ
-
-    velocityUniforms.predator.value.set( 0.5 * mouseX / windowHalfX, - 0.5 * mouseY / windowHalfY, 0 )
-    mouseX = 10000
-    mouseY = 10000
-
-    gpuCompute.compute()
-
-    bird.shader.uniforms.texturePosition.value = gpuCompute.getCurrentRenderTarget( positionVariable ).texture
-    bird.shader.uniforms.textureVelocity.value = gpuCompute.getCurrentRenderTarget( velocityVariable ).texture
-
-    if(config.lookAtSun)    
-      camera.lookAt(sunLight.position)
-
-    if(state.camera.hasChanged) {
-      let v = _sphericalToCartesian(state.camera.spherical)
-      camera.position.set(v.x, v.y, v.z)
-      state.camera.hasChanged = false
-    }    
+      // Scene
+      // ————————————————————————————
+      let ratio     = dimensions.width / dimensions.height,
+          scene     = new Scene(),
+          camera    = new PerspectiveCamera(75, ratio, 2, 2000000),
+          helper    = new GridHelper( 10000, 2, 0x000000, 0x000000 ),
+          controls
+          
+      scene.fog = new Fog( 0xffffff, 100, 1000 )
+      camera.position.set(0, 0, config.cameraRadius)
+      // scene.add( helper )
+    
+      // Renderer
+      // ————————————————————————————
+      let renderer = new WebGLRenderer()
+      document.getElementById(domId).appendChild(renderer.domElement)
+      renderer.setPixelRatio( window.devicePixelRatio )
+      renderer.setSize( dimensions.width, dimensions.height )
+      renderer.setClearColor( scene.fog.color )
+    
+      if(config.useControls) {
+        controls  = new OrbitControls( camera )
+        controls.target.set( 0, 0, 0 )
+        controls.rotateSpeed  = 1.0
+        controls.zoomSpeed    = 1.2
+        controls.panSpeed     = 0.8
+        controls.keys         = [ 65, 83, 68 ] }
       
+      // Sky
+      // ————————————————————————————
+      let sunLight  = new DirectionalLight(0xffffff),
+          skyShader = new SkyΣ(),
+          skyMesh   = new Mesh( skyShader.geometry, skyShader.material )
+      scene.add( sunLight )
+      scene.add(skyMesh)
+    
+      // Icosahedron
+      // ————————————————————————————
+      let icoMaterial = new MeshPhongMaterial({ color:      0xE8873B, 
+                                                shading:    FlatShading,
+                                                shininess:  8,
+                                                wireframe:  false}),
+          icoGeometry = new IcosahedronGeometry( 64, 1 ),
+          icosahedron = new Mesh(icoGeometry , icoMaterial)
+      // scene.add(icosahedron)
 
-    renderer.render(scene, camera)
-    // textMesh.rotation.y += 0.1 * δ
-  }
+      // Type
+      // ————————————————————————————
+      let typeMaterial = new MeshPhongMaterial({color:      0xE8873B, 
+                                                shading:    FlatShading,
+                                                shininess:  8,
+                                                wireframe:  false}),
+          typeGeom        = new TextGeometry( 'KNACK', {font: font,
+                                                        size: 80,
+                                                        height: 0,
+                                                        curveSegments: 12,
+                                                        bevelEnabled: false}),
+          typeMesh        = new Mesh( typeGeom, typeMaterial )
+      scene.add(typeMesh)
 
-  _render() }
+      // Birds
+      // ————————————————————————————
+      let { gpuCompute, 
+            positionUniforms, 
+            velocityUniforms, 
+            velocityVariable, 
+            positionVariable} = _initComputeRenderer(renderer),
+          bird                = _intitBirds()
+      scene.add(bird.mesh)
+    
+      // GUI
+      // ————————————————————————————
+      let guiConfig = { 
+        sky:  { items: config.sky,
+                onChange: () => {_updateSky(state, skyShader, sunLight)},
+                open: false},
+        birds: { items: config.birds,
+                onChange: () => {_updateBirdConfig(state, velocityUniforms)},
+                open: false}}
+    
+      state = initGui( guiConfig )
+      state.camera = {spherical: new Spherical(config.cameraRadius, 0, 0),
+                      hasChanged: true }
+      _updateBirdConfig(state, velocityUniforms)
+      _updateSky(state, skyShader, sunLight)
+    
+      // Event handlers
+      // ————————————————————————————————
+      document.addEventListener( 'mousemove', (event) => {
+                                    mouseX = event.clientX - windowHalfX
+                                    mouseY = event.clientY - windowHalfY }, false )
+      document.addEventListener( 'touchstart', (event) => {
+                                    if ( event.touches.length === 1 ) {
+                                      event.preventDefault()
+                                      mouseX = event.touches[ 0 ].pageX - windowHalfX
+                                      mouseY = event.touches[ 0 ].pageY - windowHalfY }}, false)
+    
+      document.addEventListener( 'touchmove', (event) => {
+                                    if ( event.touches.length === 1 ) {
+                                      event.preventDefault()
+                                      mouseX = event.touches[ 0 ].pageX - windowHalfX
+                                      mouseY = event.touches[ 0 ].pageY - windowHalfY }}, false )
+    
+      document.addEventListener( 'keydown', (event) => {
+                                    if(event.key === 'Alt') 
+                                      document.getElementById('rotate-indicator')
+                                        .classList.add('active') }, false )
+    
+      document.addEventListener( 'keyup', (event) => {
+                                    if(event.key === 'Alt') 
+                                      document.getElementById('rotate-indicator')
+                                        .classList.remove('active') }, false )
+    
+      // Compose
+      // ————————————————————————————————
+      // let renderTarget  = new WebGLRenderTarget( dimensions.width, dimensions.height ),
+      //     composition   = new EffectComposer( renderer, renderTarget ),
+      //     scenePass     = new RenderPass( scene, camera )
+      
+      // composition.addPass( scenePass )
+      // scenePass.renderToScreen = true
+      
+      let clock = new Clock(), δ,
+          last  = performance.now(),
+          now
+    
+      console.log('here we go —→')
+    
+      // Render
+      // ————————————————————————————————
+      function _render() {
+        // reschedule
+        requestAnimationFrame(_render) 
+        
+        // update controls
+        if( controls ) controls.update()
+    
+        // timing
+        now = performance.now();
+        δ = (now - last) / 1000
+        if (δ > 1) δ = 1 // safety cap on large deltas
+        last = now
+    
+        // update uniforms  
+        // position  
+        positionUniforms.time.value   = now
+        positionUniforms.delta.value  = δ
+        // velocity
+        velocityUniforms.time.value   = now
+        velocityUniforms.delta.value  = δ
+        // bird
+        bird.shader.uniforms.time.value = now
+        bird.shader.uniforms.delta.value = δ
+    
+        velocityUniforms.predator.value.set( 0.5 * mouseX / windowHalfX, - 0.5 * mouseY / windowHalfY, 0 )
+        mouseX = 10000
+        mouseY = 10000
+    
+        gpuCompute.compute()
+    
+        bird.shader.uniforms.texturePosition.value = gpuCompute.getCurrentRenderTarget( positionVariable ).texture
+        bird.shader.uniforms.textureVelocity.value = gpuCompute.getCurrentRenderTarget( velocityVariable ).texture
+    
+        if(config.lookAtSun)    
+          camera.lookAt(sunLight.position)
+    
+        if(state.camera.hasChanged) {
+          let v = _sphericalToCartesian(state.camera.spherical)
+          camera.position.set(v.x, v.y, v.z)
+          state.camera.hasChanged = false
+        }    
+          
+    
+        renderer.render(scene, camera)
+        // textMesh.rotation.y += 0.1 * δ
+      }
+    
+      _render() })}
 
 export default drei
