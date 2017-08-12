@@ -346,12 +346,12 @@ function drei(domId) {
     
       // Compose
       // ————————————————————————————————
-      // let renderTarget  = new WebGLRenderTarget( dimensions.width, dimensions.height ),
-      //     composition   = new EffectComposer( renderer, renderTarget ),
-      //     scenePass     = new RenderPass( scene, camera )
+      let renderTarget  = new WebGLRenderTarget( dimensions.width, dimensions.height ),
+          composition   = new EffectComposer( renderer, renderTarget ),
+          scenePass     = new RenderPass( scene, camera )
       
-      // composition.addPass( scenePass )
-      // scenePass.renderToScreen = true
+      composition.addPass( scenePass )
+      scenePass.renderToScreen = true
       
       let clock = new Clock(), δ,
           last  = performance.now(),
@@ -400,13 +400,9 @@ function drei(domId) {
         if(state.camera.hasChanged) {
           let v = _sphericalToCartesian(state.camera.spherical)
           camera.position.set(v.x, v.y, v.z)
-          state.camera.hasChanged = false
-        }    
-          
-    
-        renderer.render(scene, camera)
-        // textMesh.rotation.y += 0.1 * δ
-      }
+          state.camera.hasChanged = false }    
+        
+        composition.render(δ)}
     
       _render() })}
 
