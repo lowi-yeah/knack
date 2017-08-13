@@ -251,42 +251,41 @@ let ShaderExtras = {
    ------------------------------------------------------------------------- */
 
   'bokeh' : {
+    uniforms: { tColor:   { type: "t", value: 0, texture: null },
+          tDepth:   { type: "t", value: 1, texture: null },
+          focus:    { type: "f", value: 1.0 },
+          aspect:   { type: "f", value: 1.0 },
+          aperture: { type: "f", value: 0.025 },
+          maxblur:  { type: "f", value: 1.0 },
+          },
 
-  uniforms: { tColor:   { type: "t", value: 0, texture: null },
-        tDepth:   { type: "t", value: 1, texture: null },
-        focus:    { type: "f", value: 1.0 },
-        aspect:   { type: "f", value: 1.0 },
-        aperture: { type: "f", value: 0.025 },
-        maxblur:  { type: "f", value: 1.0 },
-        },
+    vertexShader: [
 
-  vertexShader: [
+    "varying vec2 vUv;",
 
-  "varying vec2 vUv;",
-
-  "void main() {",
+    "void main() {",
 
     "vUv = vec2( uv.x, 1.0 - uv.y );",
     "gl_Position = projectionMatrix * modelViewMatrix * vec4( position, 1.0 );",
 
-  "}"
+    "}"
 
-  ].join("\n"),
+    ].join("\n"),
 
-  fragmentShader: [
+    fragmentShader: [
 
-  "varying vec2 vUv;",
+    "varying vec2 vUv;",
 
-  "uniform sampler2D tColor;",
-  "uniform sampler2D tDepth;",
+    "uniform sampler2D tColor;",
+    "uniform sampler2D tDepth;",
 
-  "uniform float maxblur;",   // max blur amount
-  "uniform float aperture;",  // aperture - bigger values for shallower depth of field
+    "uniform float maxblur;",   // max blur amount
+    "uniform float aperture;",  // aperture - bigger values for shallower depth of field
 
-  "uniform float focus;",
-  "uniform float aspect;",
+    "uniform float focus;",
+    "uniform float aspect;",
 
-  "void main() {",
+    "void main() {",
 
     "vec2 aspectcorrect = vec2( 1.0, aspect );",
 
@@ -350,9 +349,9 @@ let ShaderExtras = {
     "gl_FragColor = col / 41.0;",
     "gl_FragColor.a = 1.0;",
 
-  "}"
+    "}"
 
-  ].join("\n")
+    ].join("\n")
 
   },
 

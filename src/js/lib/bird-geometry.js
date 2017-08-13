@@ -6,8 +6,6 @@ import {BufferAttribute,
 
 let BirdGeometry = function(width) {
 
-  console.log('make bird geometry')
-
   let birds     = width * width,
       triangles = birds * 3,
       points    = triangles * 3
@@ -74,7 +72,7 @@ let BirdGeometry = function(width) {
     // the index of the vertex within the gemoetry
     birdVertex.array[ ζ ] = ζ % 9 }
 
-  this.scale( 0.1, 0.1, 0.1 )}
+  this.scale( 0.05, 0.05, 0.05 )}
 
 BirdGeometry.prototype = Object.create( BufferGeometry.prototype )
 

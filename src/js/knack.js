@@ -1,4 +1,5 @@
 import {AmbientLight,
+        Box3,
         BoxGeometry,
         Clock,
         Color,
@@ -66,22 +67,29 @@ import {BloomPass,
 import fontLoader             from './lib/font-loader'
 import ShaderExtras           from './lib/shader-extras'
 import OrbitControls          from './lib/orbit-controls'
+import TextSprite             from './lib/text-sprite'
+import BirdGeometry           from './lib/bird-geometry' 
 import GPUComputationRenderer from './lib/gpu-computation-renderer'
+
 import SkyΣ                   from './shader/sky'
 import BirdΣ                  from './shader/birds'
-import BirdGeometry           from './lib/bird-geometry' 
+
 import initGui                from './drei/gui' 
+
 
 let config  = { wireframe:    false,
                 useControls:  true,
-                lookAtSun:    false,
-                cameraRadius: 400,
+                
+                camera: { lookAtSun:    false,
+                          radius: 400,
+                          fov: 100 },
+
                 sky: {turbidity:        [10, 1, 20, 0.1],
                       rayleigh:         [1, 0, 4, 0.001],
                       mieCoefficient:   [0.02, 0, 0.1, 0.001],
                       mieDirectionalG:  [0.8, 0, 1, 0.001],
                       luminance:        [1, 0, 2, 0.001],
-                      inclination:      [0.50, 0.0001, 0.6, 0.0001],   // elevation / inclination
+                      inclination:      [0.47, 0.2, 0.52, 0.0001],   // elevation / inclination
                       azimuth:          [0.25, 0, 1, 0.0001, false],  // Facing front,
                       distance:         [2000, false],
                       sun:              [true, false] },
@@ -112,6 +120,7 @@ let DEBUG                   = true,
     computeTextureSize      = 16
 
 function _degrees(δ) {return ThreeMath.DEG2RAD * δ}
+function _rad(δ) {return ThreeMath.RAD2DEG * δ}
 
 function _sphericalToCartesian(spherical) {
   let x = spherical.radius * Math.sin(spherical.theta) * Math.cos(-spherical.phi),
@@ -120,11 +129,21 @@ function _sphericalToCartesian(spherical) {
   return new Vector3(x, y, z) }
 
 function _fillPositionTexture( texture ) {
-  var theArray = texture.image.data;
-  for ( var k = 0, kl = theArray.length; k < kl; k += 4 ) {
-    var x = Math.random() * BOUNDS - BOUNDS_HALF
-    var y = Math.random() * BOUNDS - BOUNDS_HALF
-    var z = Math.random() * BOUNDS - BOUNDS_HALF
+
+  function _random() {
+    let o = (Math.random() < 0.5) ? 0 : BOUNDS,
+        p = Math.random() * BOUNDS
+    if(o === 0) return o - p
+    else return o + p }
+
+  let theArray = texture.image.data
+  for ( var k = 0; k < theArray.length; k += 4 ) {
+    // let x = Math.random() * BOUNDS - BOUNDS_HALF,
+    let x = _random(),
+        y = _random(),
+        // birds appear from the distance
+        z = -BOUNDS - Math.random() * BOUNDS
+
     theArray[ k + 0 ] = x
     theArray[ k + 1 ] = y
     theArray[ k + 2 ] = z
@@ -237,24 +256,24 @@ function _updatePassConfig(state, composition) {
 
 function drei(domId) {
   fontLoader('/fonts/HelveticaNeue-Medium.otf', {reverseTypeface: true})
-  .then((font) => {// State
+  .then((font) => {
+
+      // State
       // ————————————————————————————
       // gets inititalized by gui
       let state
-
-      console.log('font', font)
     
       // Scene
       // ————————————————————————————
       let ratio     = dimensions.width / dimensions.height,
           scene     = new Scene(),
-          camera    = new PerspectiveCamera(75, ratio, 2, 2000000),
+          camera    = new PerspectiveCamera(config.camera.fov, ratio, 2, 2000000),
           helper    = new GridHelper( 10000, 2, 0x000000, 0x000000 ),
           controls
           
       scene.fog = new Fog( 0xffffff, 100, 1000 )
-      camera.position.set(0, 0, config.cameraRadius)
-      // scene.add( helper )
+      camera.position.set(0, 0, config.camera.radius)
+      scene.add( helper )
     
       // Renderer
       // ————————————————————————————
@@ -267,10 +286,13 @@ function drei(domId) {
       if(config.useControls) {
         controls  = new OrbitControls( camera )
         controls.target.set( 0, 0, 0 )
-        controls.rotateSpeed  = 1.0
-        controls.zoomSpeed    = 1.2
-        controls.panSpeed     = 0.8
-        controls.keys         = [ 65, 83, 68 ] }
+        controls.rotateSpeed    = 1.0
+        controls.enableZoom     = false
+        controls.enablePan      = false
+        controls.enableDamping  = true
+        
+        // controls.keys         = [ 65, 83, 68 ] 
+      }
       
       // Sky
       // ————————————————————————————
@@ -302,10 +324,29 @@ function drei(domId) {
                                                         height: 0,
                                                         curveSegments: 12,
                                                         bevelEnabled: false}),
-          typeMesh        = new Mesh( typeGeom, typeMaterial )
+          typeMesh        = new Mesh( typeGeom, typeMaterial ),
+          typeBox         = new Box3().setFromObject( typeMesh ),
+          boxWidth        = typeBox.max.x - typeBox.min.x
 
-      typeMesh.rotation.x = _degrees(90)
+      typeMesh.position.set(-boxWidth/2, 0, 0) 
       scene.add(typeMesh)
+
+
+      // let redrawInterval  = 1,
+      //     fontSize        = 100,
+      //     sprite          = new TextSprite( { textSize: fontSize,
+      //                                         redrawInterval,
+      //                                         material: { color: 0x000000 },
+      //                                         texture:  { 
+      //                                           text: 'KNACK',
+      //                                           fontFamily: '"Futura Bold", System Font' }})
+      // scene.add(sprite)
+      // sprite.position§
+      //   .setX(0)
+      //   .setY(0)
+      //   .setZ(0)
+      //   .subScalar(1/2)
+      //   .multiplyScalar(2)
 
       // Birds
       // ————————————————————————————
@@ -373,20 +414,55 @@ function drei(domId) {
                                           sepiaIntensity:     1.0,
                                           vignetteOffset:     1.0,
                                           vignetteDarkness:   1.0 }),
-          smaaPass        = new SMAAPass(window.Image)
-      
+          bloomPass       = new BloomPass( 0.6 ),
+
+          bleachShader    = { uniforms:       UniformsUtils.clone( ShaderExtras[ 'bleachbypass' ].uniforms ),
+                              vertexShader:   ShaderExtras[ 'bleachbypass' ].vertexShader,
+                              fragmentShader: ShaderExtras[ 'bleachbypass' ].fragmentShader},
+          bleachMaterial  = new ShaderMaterial(bleachShader),
+          bleachPass      = new ShaderPass( bleachMaterial ),
+          
+
+          hBlurShader     = { uniforms:       UniformsUtils.clone( ShaderExtras[ 'horizontalTiltShift' ].uniforms ),
+                              vertexShader:   ShaderExtras[ 'horizontalTiltShift' ].vertexShader,
+                              fragmentShader: ShaderExtras[ 'horizontalTiltShift' ].fragmentShader},
+          hBlurMaterial   = new ShaderMaterial(hBlurShader),
+          hblurPass       = new ShaderPass( hBlurMaterial ),
+
+          vBlurShader     = { uniforms:       UniformsUtils.clone( ShaderExtras[ 'verticalTiltShift' ].uniforms ),
+                              vertexShader:   ShaderExtras[ 'verticalTiltShift' ].vertexShader,
+                              fragmentShader: ShaderExtras[ 'verticalTiltShift' ].fragmentShader},
+          vBlurMaterial   = new ShaderMaterial(vBlurShader),
+          vblurPass       = new ShaderPass( vBlurMaterial ),
+
+
+          smaaPass        = new SMAAPass(window.Image),
+
+          bluriness       = 4
+
+
+
+        hBlurShader.uniforms.h.value = bluriness / dimensions.width
+        hBlurShader.uniforms.r.value = 0.5
+        vBlurShader.uniforms.v.value = bluriness / dimensions.height
+        vBlurShader.uniforms.r.value = 0.5
 
       composition.addPass( scenePass )
-      // composition.addPass( pixelationPass )
-      // composition.addPass( dotScreenPass )
-      // composition.addPass( filmPass )
-      // composition.addPass( smaaPass )
+          // composition.addPass( bloomPass )
+      composition.addPass( hblurPass )
+      composition.addPass( vblurPass )
+          // composition.addPass( pixelationPass )
+          // composition.addPass( dotScreenPass )
+          // composition.addPass( filmPass )
+      composition.addPass( smaaPass )
 
-      scenePass.renderToScreen = true
+      // scenePass.renderToScreen = true
+      // bleachPass.renderToScreen = true;
+      // vblurPass.renderToScreen = true;
       // pixelationPass.renderToScreen = true
       // dotScreenPass.renderToScreen = true
       // filmPass.renderToScreen = true
-      // smaaPass.renderToScreen = true
+      smaaPass.renderToScreen = true
 
       
       // GUI
@@ -451,12 +527,11 @@ function drei(domId) {
         bird.shader.uniforms.texturePosition.value = gpuCompute.getCurrentRenderTarget( positionVariable ).texture
         bird.shader.uniforms.textureVelocity.value = gpuCompute.getCurrentRenderTarget( velocityVariable ).texture
     
-        if(config.lookAtSun)    
-          camera.lookAt(sunLight.position)
     
-        if(state.camera.hasChanged) {
+        if(config.camera.lookAtSun && state.camera.hasChanged) {
           let v = _sphericalToCartesian(state.camera.spherical)
           camera.position.set(v.x, v.y, v.z)
+          camera.lookAt(sunLight.position)
           state.camera.hasChanged = false }    
         
         composition.render(δ)}
