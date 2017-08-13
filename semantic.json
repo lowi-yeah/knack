@@ -24,7 +24,8 @@
     "button",
     "container",
     "icon",
-    "segment"
+    "segment",
+    "grid"
   ],
   "version": "2.2.11"
 }

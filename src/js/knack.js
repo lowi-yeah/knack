@@ -78,7 +78,7 @@ import initGui                from './drei/gui'
 
 
 let config  = { wireframe:    false,
-                useControls:  true,
+                useControls:  false,
                 
                 camera: { lookAtSun:    false,
                           radius: 400,
@@ -89,7 +89,7 @@ let config  = { wireframe:    false,
                       mieCoefficient:   [0.02, 0, 0.1, 0.001],
                       mieDirectionalG:  [0.8, 0, 1, 0.001],
                       luminance:        [1, 0, 2, 0.001],
-                      inclination:      [0.47, 0.2, 0.52, 0.0001],   // elevation / inclination
+                      inclination:      [0.52, 0.2, 0.52, 0.0001],   // elevation / inclination
                       azimuth:          [0.25, 0, 1, 0.0001, false],  // Facing front,
                       distance:         [2000, false],
                       sun:              [true, false] },
@@ -117,7 +117,7 @@ let DEBUG                   = true,
     windowHalfY             = dimensions.height / 2,
     BOUNDS                  = 800, 
     BOUNDS_HALF             = BOUNDS / 2,
-    computeTextureSize      = 16
+    computeTextureSize      = 8
 
 function _degrees(δ) {return ThreeMath.DEG2RAD * δ}
 function _rad(δ) {return ThreeMath.RAD2DEG * δ}
@@ -255,8 +255,8 @@ function _updatePassConfig(state, composition) {
 }
 
 function drei(domId) {
-  fontLoader('/fonts/HelveticaNeue-Medium.otf', {reverseTypeface: true})
-  .then((font) => {
+  return fontLoader('/fonts/HelveticaNeue-Medium.otf', {reverseTypeface: true})
+    .then((font) => {
 
       // State
       // ————————————————————————————
@@ -271,9 +271,9 @@ function drei(domId) {
           helper    = new GridHelper( 10000, 2, 0x000000, 0x000000 ),
           controls
           
-      scene.fog = new Fog( 0xffffff, 100, 1000 )
+      scene.fog = new Fog( 0xffffff, config.camera.radius * 1.1, 1000 )
       camera.position.set(0, 0, config.camera.radius)
-      scene.add( helper )
+      // scene.add( helper )
     
       // Renderer
       // ————————————————————————————
@@ -305,7 +305,7 @@ function drei(domId) {
       // Icosahedron
       // ————————————————————————————
       let icoMaterial = new MeshPhongMaterial({ color:      0xE8873B, 
-                                                shading:    FlatShading,
+                                                shading:    SmoothShading,
                                                 shininess:  8,
                                                 wireframe:  false}),
           icoGeometry = new IcosahedronGeometry( 64, 1 ),
@@ -314,39 +314,22 @@ function drei(domId) {
 
       // Type
       // ————————————————————————————
-      let typeMaterial = new MeshPhongMaterial({color:      0xE8873B, 
-                                                shading:    FlatShading,
-                                                shininess:  8,
-                                                fog:        false,
-                                                wireframe:  false}),
+      let typeMaterial = new MeshStandardMaterial({ color:      0x000000, 
+                                                    fog:        true,
+                                                    shading:    SmoothShading,
+                                                    wireframe:  false}),
           typeGeom        = new TextGeometry( 'KNACK', {font: font,
                                                         size: 80,
-                                                        height: 0,
+                                                        height: 12,
                                                         curveSegments: 12,
                                                         bevelEnabled: false}),
           typeMesh        = new Mesh( typeGeom, typeMaterial ),
           typeBox         = new Box3().setFromObject( typeMesh ),
-          boxWidth        = typeBox.max.x - typeBox.min.x
+          boxWidth        = typeBox.max.x - typeBox.min.x,
+          boxHeight       = typeBox.max.y - typeBox.min.y
 
-      typeMesh.position.set(-boxWidth/2, 0, 0) 
+      typeMesh.position.set(-boxWidth/2, -boxHeight*0.38, 0) 
       scene.add(typeMesh)
-
-
-      // let redrawInterval  = 1,
-      //     fontSize        = 100,
-      //     sprite          = new TextSprite( { textSize: fontSize,
-      //                                         redrawInterval,
-      //                                         material: { color: 0x000000 },
-      //                                         texture:  { 
-      //                                           text: 'KNACK',
-      //                                           fontFamily: '"Futura Bold", System Font' }})
-      // scene.add(sprite)
-      // sprite.position§
-      //   .setX(0)
-      //   .setY(0)
-      //   .setZ(0)
-      //   .subScalar(1/2)
-      //   .multiplyScalar(2)
 
       // Birds
       // ————————————————————————————
@@ -440,30 +423,18 @@ function drei(domId) {
 
           bluriness       = 4
 
-
-
         hBlurShader.uniforms.h.value = bluriness / dimensions.width
         hBlurShader.uniforms.r.value = 0.5
         vBlurShader.uniforms.v.value = bluriness / dimensions.height
         vBlurShader.uniforms.r.value = 0.5
 
       composition.addPass( scenePass )
-          // composition.addPass( bloomPass )
       composition.addPass( hblurPass )
       composition.addPass( vblurPass )
-          // composition.addPass( pixelationPass )
-          // composition.addPass( dotScreenPass )
-          // composition.addPass( filmPass )
       composition.addPass( smaaPass )
 
       // scenePass.renderToScreen = true
-      // bleachPass.renderToScreen = true;
-      // vblurPass.renderToScreen = true;
-      // pixelationPass.renderToScreen = true
-      // dotScreenPass.renderToScreen = true
-      // filmPass.renderToScreen = true
       smaaPass.renderToScreen = true
-
       
       // GUI
       // ————————————————————————————
@@ -484,7 +455,6 @@ function drei(domId) {
                       hasChanged: true }
       _updateBirdConfig(state, velocityUniforms)
       _updateSky(state, skyShader, sunLight)
-      // _updatePassConfig(state, composition)
 
       
       // run…
@@ -527,15 +497,27 @@ function drei(domId) {
         bird.shader.uniforms.texturePosition.value = gpuCompute.getCurrentRenderTarget( positionVariable ).texture
         bird.shader.uniforms.textureVelocity.value = gpuCompute.getCurrentRenderTarget( velocityVariable ).texture
     
-    
         if(config.camera.lookAtSun && state.camera.hasChanged) {
           let v = _sphericalToCartesian(state.camera.spherical)
           camera.position.set(v.x, v.y, v.z)
           camera.lookAt(sunLight.position)
           state.camera.hasChanged = false }    
-        
         composition.render(δ)}
     
-      _render() })}
+      _render() 
+
+      function update({inclination, zText}) {
+        if(inclination) { 
+          state.sky.inclination = inclination
+          _updateSky(state, skyShader, sunLight) }
+        if(zText) {
+          typeMesh.position.z = zText * -2000
+          // typeMesh.position.z = zText * -2000
+          
+          // typeMesh.scale.y = 1 - zText
+        }}
+      return update })}
+
+
 
 export default drei
