@@ -55,9 +55,12 @@ import {BloomPass,
         EffectComposer, 
         FilmPass,
         GlitchPass,
+        GodRaysPass,
+        PixelationPass,
         RenderPass,
         SavePass,
         ShaderPass,
+        SMAAPass,
         TexturePass}          from 'postprocessing'
 
 import fontLoader             from './lib/font-loader'
@@ -80,13 +83,15 @@ let config  = { wireframe:    false,
                       luminance:        [1, 0, 2, 0.001],
                       inclination:      [0.50, 0.0001, 0.6, 0.0001],   // elevation / inclination
                       azimuth:          [0.25, 0, 1, 0.0001, false],  // Facing front,
-                      distance:         [4000, false],
+                      distance:         [2000, false],
                       sun:              [true, false] },
 
                 birds: {seperation: [20.0, 0, 100, 1],
                         alignment:  [20.0, 0, 100, 0.001],
                         cohesion:   [20.0, 0, 100, 0.025],
-                        freedom:    [0.75, false] }}
+                        freedom:    [0.75, false] },
+
+                passes: { pixelation: [20.0, 0, 100, 1]}}
 
 
 // todo: put these somewhere sensible
@@ -104,7 +109,7 @@ let DEBUG                   = true,
     windowHalfY             = dimensions.height / 2,
     BOUNDS                  = 800, 
     BOUNDS_HALF             = BOUNDS / 2,
-    computeTextureSize      = 8
+    computeTextureSize      = 16
 
 function _degrees(δ) {return ThreeMath.DEG2RAD * δ}
 
@@ -222,6 +227,14 @@ function _updateBirdConfig(state, velocityUniforms) {
   velocityUniforms.cohesionDistance.value   = state.birds.cohesion
   velocityUniforms.freedomFactor.value      = state.birds.freedom }
 
+function _updatePassConfig(state, composition) { 
+  console.log('_updatePassConfig')
+  // console.log('state', state.passes.pixelation)
+  console.log('composition', composition)
+  // pixelationPass.pixelationMaterial.uniforms.granularity.value = state.passes.pixelation
+  // pixelationPass = new PixelationPass(state.passes.pixelation)
+}
+
 function drei(domId) {
   fontLoader('/fonts/HelveticaNeue-Medium.otf', {reverseTypeface: true})
   .then((font) => {// State
@@ -282,6 +295,7 @@ function drei(domId) {
       let typeMaterial = new MeshPhongMaterial({color:      0xE8873B, 
                                                 shading:    FlatShading,
                                                 shininess:  8,
+                                                fog:        false,
                                                 wireframe:  false}),
           typeGeom        = new TextGeometry( 'KNACK', {font: font,
                                                         size: 80,
@@ -289,6 +303,8 @@ function drei(domId) {
                                                         curveSegments: 12,
                                                         bevelEnabled: false}),
           typeMesh        = new Mesh( typeGeom, typeMaterial )
+
+      typeMesh.rotation.x = _degrees(90)
       scene.add(typeMesh)
 
       // Birds
@@ -301,22 +317,7 @@ function drei(domId) {
           bird                = _intitBirds()
       scene.add(bird.mesh)
     
-      // GUI
-      // ————————————————————————————
-      let guiConfig = { 
-        sky:  { items: config.sky,
-                onChange: () => {_updateSky(state, skyShader, sunLight)},
-                open: false},
-        birds: { items: config.birds,
-                onChange: () => {_updateBirdConfig(state, velocityUniforms)},
-                open: false}}
-    
-      state = initGui( guiConfig )
-      state.camera = {spherical: new Spherical(config.cameraRadius, 0, 0),
-                      hasChanged: true }
-      _updateBirdConfig(state, velocityUniforms)
-      _updateSky(state, skyShader, sunLight)
-    
+      
       // Event handlers
       // ————————————————————————————————
       document.addEventListener( 'mousemove', (event) => {
@@ -346,21 +347,70 @@ function drei(domId) {
     
       // Compose
       // ————————————————————————————————
-      let renderTarget  = new WebGLRenderTarget( dimensions.width, dimensions.height ),
-          composition   = new EffectComposer( renderer, renderTarget ),
-          scenePass     = new RenderPass( scene, camera )
+      let renderTarget    = new WebGLRenderTarget( dimensions.width, dimensions.height ),
+          composition     = new EffectComposer( renderer, renderTarget ),
+          scenePass       = new RenderPass( scene, camera ),
+          pixelationPass  = new PixelationPass(12),
+          dotScreenPass   = new DotScreenPass({}),
+          filmPass        = new FilmPass({greyscale:          false,
+                                          sepia:              false,
+                                          vignette:           false,
+                                          eskil:              false,
+                                          screenMode:         true,
+                                          scanlines:          true,
+                                          noise:              true,
+                                          noiseIntensity:     0.5,
+                                          scanlineIntensity:  0.5,
+                                          scanlineDensity:    1.0,
+                                          greyscaleIntensity: 1.0,
+                                          sepiaIntensity:     1.0,
+                                          vignetteOffset:     1.0,
+                                          vignetteDarkness:   1.0 }),
+          smaaPass        = new SMAAPass(window.Image)
       
+
       composition.addPass( scenePass )
+      // composition.addPass( pixelationPass )
+      // composition.addPass( dotScreenPass )
+      // composition.addPass( filmPass )
+      // composition.addPass( smaaPass )
+
       scenePass.renderToScreen = true
+      // pixelationPass.renderToScreen = true
+      // dotScreenPass.renderToScreen = true
+      // filmPass.renderToScreen = true
+      // smaaPass.renderToScreen = true
+
       
+      // GUI
+      // ————————————————————————————
+      let guiConfig = { 
+        sky:  { items: config.sky,
+                onChange: () => {_updateSky(state, skyShader, sunLight)},
+                open: false},
+        birds: { items: config.birds,
+                onChange: () => {_updateBirdConfig(state, velocityUniforms)},
+                open: false},
+        // passes: { items: config.passes,
+        //         onChange: () => {_updatePassConfig(state, pixelationPass)},
+        //         open: false}
+              }
+    
+      state = initGui( guiConfig )
+      state.camera = {spherical: new Spherical(config.cameraRadius, 0, 0),
+                      hasChanged: true }
+      _updateBirdConfig(state, velocityUniforms)
+      _updateSky(state, skyShader, sunLight)
+      // _updatePassConfig(state, composition)
+
+      
+      // run…
+      // ————————————————————————————
       let clock = new Clock(), δ,
           last  = performance.now(),
           now
-    
       console.log('here we go —→')
     
-      // Render
-      // ————————————————————————————————
       function _render() {
         // reschedule
         requestAnimationFrame(_render) 
