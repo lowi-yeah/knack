@@ -344,7 +344,14 @@ function drei(domId) {
                                     if(event.key === 'Alt') 
                                       document.getElementById('rotate-indicator')
                                         .classList.remove('active') }, false )
-    
+
+      window.addEventListener( 'resize', (event) => {
+                                    dimensions.width = window.innerWidth
+                                    dimensions.height = window.innerHeight
+                                    renderer.setSize( dimensions.width, dimensions.height )
+                                    camera.aspect = dimensions.width / dimensions.height
+                                    camera.updateProjectionMatrix() }, false )
+
       // Compose
       // ————————————————————————————————
       let renderTarget    = new WebGLRenderTarget( dimensions.width, dimensions.height ),
