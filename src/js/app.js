@@ -1,7 +1,7 @@
 // JS Goes here - ES6 supported
 
 // import jQuery from 'jquery'
-import Detector from './lib/Detector'
+import Detector from './lib/detector'
 import knack    from './knack'
 
 // assets is a collection of all external assets used throughout the site
