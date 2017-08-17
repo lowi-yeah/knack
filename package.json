@@ -62,6 +62,7 @@
     "p5": "^0.5.11",
     "paper": "^0.11.4",
     "parse-svg-path": "^0.1.2",
+    "perfect-scrollbar": "^0.7.1",
     "postcss-assets": "^4.2.0",
     "postcss-cssnext": "^2.7.0",
     "postcss-import": "^10.0.0",

@@ -72,7 +72,7 @@ let BirdGeometry = function(width) {
     // the index of the vertex within the gemoetry
     birdVertex.array[ ζ ] = ζ % 9 }
 
-  this.scale( 0.05, 0.05, 0.05 )}
+  this.scale( 0.2, 0.2, 0.2 )}
 
 BirdGeometry.prototype = Object.create( BufferGeometry.prototype )
 

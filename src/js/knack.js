@@ -64,6 +64,8 @@ import {BloomPass,
         SMAAPass,
         TexturePass}          from 'postprocessing'
 
+import {scaleLinear}          from 'd3-scale'
+
 import fontLoader             from './lib/font-loader'
 import ShaderExtras           from './lib/shader-extras'
 import OrbitControls          from './lib/orbit-controls'
@@ -79,17 +81,17 @@ import initGui                from './drei/gui'
 
 let config  = { wireframe:    false,
                 useControls:  false,
+                renderText:   false,
                 
                 camera: { lookAtSun:    false,
-                          radius: 400,
-                          fov: 100 },
-
+                          radius: 800,
+                          fov: 75 },
                 sky: {turbidity:        [10, 1, 20, 0.1],
                       rayleigh:         [1, 0, 4, 0.001],
                       mieCoefficient:   [0.02, 0, 0.1, 0.001],
                       mieDirectionalG:  [0.8, 0, 1, 0.001],
                       luminance:        [1, 0, 2, 0.001],
-                      inclination:      [0.52, 0.2, 0.52, 0.0001],   // elevation / inclination
+                      inclination:      [0.50, 0.2, 0.515, 0.0001],   // elevation / inclination
                       azimuth:          [0.25, 0, 1, 0.0001, false],  // Facing front,
                       distance:         [2000, false],
                       sun:              [true, false] },
@@ -271,7 +273,7 @@ function drei(domId) {
           helper    = new GridHelper( 10000, 2, 0x000000, 0x000000 ),
           controls
           
-      scene.fog = new Fog( 0xffffff, config.camera.radius * 1.1, 1000 )
+      scene.fog = new Fog( 0xffffff, config.camera.radius * 1.1, config.camera.radius * 2 )
       camera.position.set(0, 0, config.camera.radius)
       // scene.add( helper )
     
@@ -314,22 +316,23 @@ function drei(domId) {
 
       // Type
       // ————————————————————————————
-      let typeMaterial = new MeshStandardMaterial({ color:      0x000000, 
-                                                    fog:        true,
-                                                    shading:    SmoothShading,
-                                                    wireframe:  false}),
-          typeGeom        = new TextGeometry( 'KNACK', {font: font,
-                                                        size: 80,
-                                                        height: 12,
-                                                        curveSegments: 12,
-                                                        bevelEnabled: false}),
-          typeMesh        = new Mesh( typeGeom, typeMaterial ),
-          typeBox         = new Box3().setFromObject( typeMesh ),
-          boxWidth        = typeBox.max.x - typeBox.min.x,
-          boxHeight       = typeBox.max.y - typeBox.min.y
-
-      typeMesh.position.set(-boxWidth/2, -boxHeight*0.38, 0) 
-      scene.add(typeMesh)
+      if(config.renderText) {
+        let typeMaterial = new MeshStandardMaterial({ color:      0x000000, 
+                                                      fog:        true,
+                                                      shading:    SmoothShading,
+                                                      wireframe:  false}),
+            typeGeom        = new TextGeometry( 'KNACK', {font: font,
+                                                          size: 80,
+                                                          height: 0,
+                                                          curveSegments: 12,
+                                                          bevelEnabled: false}),
+            typeMesh        = new Mesh( typeGeom, typeMaterial ),
+            typeBox         = new Box3().setFromObject( typeMesh ),
+            boxWidth        = typeBox.max.x - typeBox.min.x,
+            boxHeight       = typeBox.max.y - typeBox.min.y
+      
+        typeMesh.position.set(-boxWidth/2, -boxHeight*0.38, 0) 
+        scene.add(typeMesh) }
 
       // Birds
       // ————————————————————————————
@@ -339,8 +342,8 @@ function drei(domId) {
             velocityVariable, 
             positionVariable} = _initComputeRenderer(renderer),
           bird                = _intitBirds()
+
       scene.add(bird.mesh)
-    
       
       // Event handlers
       // ————————————————————————————————
@@ -506,16 +509,40 @@ function drei(domId) {
     
       _render() 
 
-      function update({inclination, zText}) {
-        if(inclination) { 
-          state.sky.inclination = inclination
+
+      //                _      _
+      //  _  _ _ __  __| |__ _| |_ ___
+      // | || | '_ \/ _` / _` |  _/ -_)
+      //  \_,_| .__/\__,_\__,_|\__\___|
+      //      |_|
+      let sunΣ              = scaleLinear()
+                                .domain([0, 1])
+                                .range([config.sky.inclination[0], config.sky.inclination[1]])
+                                .clamp(true),
+          rayleighΣ         = scaleLinear()
+                                .domain([0, 1])
+                                .range([config.sky.rayleigh[0], config.sky.inclination[2]])
+                                .clamp(true),
+          mieCoefficientΣ   = scaleLinear()
+                              .domain([0, 1])
+                              .range([config.sky.mieCoefficient[0], config.sky.mieCoefficient[2]])
+                              .clamp(true),
+          mieDirectionalGΣ  = scaleLinear()
+                                .domain([0, 1])
+                                .range([config.sky.mieDirectionalG[0], config.sky.mieDirectionalG[1]])
+                                .clamp(true)
+  
+      function update({top, left}) {
+        if(top) {
+          state.sky.inclination = sunΣ(top)
+          state.sky.rayleigh = rayleighΣ(top)
+          state.sky.mieCoefficient = mieCoefficientΣ(top)
+          state.sky.mieDirectionalG = mieDirectionalGΣ(top)
           _updateSky(state, skyShader, sunLight) }
-        if(zText) {
-          typeMesh.position.z = zText * -2000
-          // typeMesh.position.z = zText * -2000
-          
-          // typeMesh.scale.y = 1 - zText
-        }}
+        if(left) {
+          camera.rotation.y = -2 * Math.PI * left
+          camera.updateProjectionMatrix() }
+      }
       return update })}
 
 

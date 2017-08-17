@@ -1,0 +1,36 @@
+@red: #FF6B67;
+
+section {
+  display: flex;
+  position: relative;
+  flex-wrap: wrap;
+  width: 100%;  
+  justify-content: flex-start;
+  background: @blue;
+
+}
+
+.screen {
+  width: 100vw;
+  height: 100vh;
+  position: relative;
+  border: 1px solid @red;
+  flex: 0 0 auto;
+  display: flex;
+  flex-direction: column;
+
+  &.center.aligned {
+    text-align: center;
+    justify-content: center;  
+  }
+
+  .content {
+
+  }
+  
+}
+
+/* Grid Based */
+// .ui[class*="one column"].grid > .column:not(.row) {
+//   width: @oneColumn;
+// }
