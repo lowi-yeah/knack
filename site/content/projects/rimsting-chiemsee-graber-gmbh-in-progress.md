@@ -1,7 +1,7 @@
 ---
 title: "Rimsting Chiemsee Graber Gmbh In Progress"
 date: 2017-08-17T16:25:36+02:00
-draft: true
+draft: false
 ---
 
 Mit der Graber GmbH entsteht auf Grundlage einer von Studio Knack erarbeiteten Bebauungsplanänderung und -erweiterung ein Firmengebäude in Rimsting.

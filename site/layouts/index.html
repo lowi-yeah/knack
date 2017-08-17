@@ -1,105 +1,17 @@
-{{ partial "header" . }}
+{{ define "main" }}
+  {{ if not .Site.Params.about.hide }}
+    {{ partial "about" . }}
+  {{ end }}
 
-{{ partial "shader" . }}
+  {{ if not .Site.Params.portfolio.hide }}
+    {{ partial "portfolio" . }}
+  {{ end }}
 
-<!-- <div id="three"></div> -->
+  {{ if not .Site.Params.recentposts.hide }}
+    {{ partial "recent-posts" . }}
+  {{ end }}
 
-<div id="scroll">
-  <div id="scroll-content">
-    <div id="first" class="middle aligned center aligned screen">
-      <div class="content">
-      <h1 class="ui header">
-        KNACK
-      </h1>
-      </div>
-    </div>
-    <section>
-      <div class="screen">
-        <div class="ui segment">
-          <h1>An Anna Blume</h1>
-          <p>
-            Oh Du, Geliebte meiner 27 Sinne, ich liebe Dir!
-            Du, Deiner, Dich Dir, ich Dir, Du mir, ---- wir?
-            Das gehört beiläufig nicht hierher!
-            Wer bist Du, ungezähltes Frauenzimmer, Du bist, bist Du?
-            Die Leute sagen, Du wärest.
-            Laß sie sagen, sie wissen nicht, wie der Kirchturm steht.
-            Du trägst den Hut auf Deinen Füßen und wanderst auf die Hände,
-            Auf den Händen wanderst Du.
-            Halloh, Deine roten Kleider, in weiße Falten zersägt,
-            Rot liebe ich Anna Blume, rot liebe ich Dir.
-            Du, Deiner, Dich Dir, ich Dir, Du mir, ----- wir?
-            Das gehört beiläufig in die kalte Glut!
-            Anna Blume, rote Anna Blume, wie sagen die Leute?
-            Preisfrage:
-            1. Anna Blume hat ein Vogel,
-            2. Anna Blume ist rot.
-            3. Welche Farbe hat der Vogel?
-            Blau ist die Farbe Deines gelben Haares,
-            Rot ist die Farbe Deines grünen Vogels.
-            Du schlichtes Mädchen im Alltagskleid,
-            Du liebes grünes Tier, ich liebe Dir!
-            Du Deiner Dich Dir, ich Dir, Du mir, ---- wir!
-            Das gehört beiläufig in die ---- Glutenkiste.
-            Anna Blume, Anna, A----N----N----A!
-            Ich träufle Deinen Namen.
-            Dein Name tropft wie weiches Rindertalg.
-            Weißt Du es Anna, weißt Du es schon,
-            Man kann Dich auch von hinten lesen.
-            Und Du, Du Herrlichste von allen,
-            Du bist von hinten, wie von vorne:
-            A------N------N------A.
-            Rindertalg träufelt STREICHELN über meinen Rücken.
-            Anna Blume,
-            Du tropfes Tier,
-            Ich-------liebe-------Dir!
-          </p>
-        </div>
-      </div>
-      <div class="screen">
-        <div class="ui segment">
-          <h1>An Anna Blume</h1>
-          <p>
-            Oh Du, Geliebte meiner 27 Sinne, ich liebe Dir!
-            Du, Deiner, Dich Dir, ich Dir, Du mir, ---- wir?
-            Das gehört beiläufig nicht hierher!
-            Wer bist Du, ungezähltes Frauenzimmer, Du bist, bist Du?
-            Die Leute sagen, Du wärest.
-            Laß sie sagen, sie wissen nicht, wie der Kirchturm steht.
-            Du trägst den Hut auf Deinen Füßen und wanderst auf die Hände,
-            Auf den Händen wanderst Du.
-            Halloh, Deine roten Kleider, in weiße Falten zersägt,
-            Rot liebe ich Anna Blume, rot liebe ich Dir.
-            Du, Deiner, Dich Dir, ich Dir, Du mir, ----- wir?
-            Das gehört beiläufig in die kalte Glut!
-            Anna Blume, rote Anna Blume, wie sagen die Leute?
-            Preisfrage:
-            1. Anna Blume hat ein Vogel,
-            2. Anna Blume ist rot.
-            3. Welche Farbe hat der Vogel?
-            Blau ist die Farbe Deines gelben Haares,
-            Rot ist die Farbe Deines grünen Vogels.
-            Du schlichtes Mädchen im Alltagskleid,
-            Du liebes grünes Tier, ich liebe Dir!
-            Du Deiner Dich Dir, ich Dir, Du mir, ---- wir!
-            Das gehört beiläufig in die ---- Glutenkiste.
-            Anna Blume, Anna, A----N----N----A!
-            Ich träufle Deinen Namen.
-            Dein Name tropft wie weiches Rindertalg.
-            Weißt Du es Anna, weißt Du es schon,
-            Man kann Dich auch von hinten lesen.
-            Und Du, Du Herrlichste von allen,
-            Du bist von hinten, wie von vorne:
-            A------N------N------A.
-            Rindertalg träufelt STREICHELN über meinen Rücken.
-            Anna Blume,
-            Du tropfes Tier,
-            Ich-------liebe-------Dir!
-          </p>
-        </div>
-      </div>
-    </section>
-  </div>
-</div>
-
-{{ partial "footer" . }}
+  {{ if not .Site.Params.contact.hide }}
+    {{ partial "contact" . }}
+  {{ end }}
+{{ end }}

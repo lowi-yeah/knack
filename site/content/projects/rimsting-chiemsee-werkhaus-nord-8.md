@@ -1,7 +1,7 @@
 ---
 title: "Rimsting Chiemsee Werkhaus Nord 8"
 date: 2017-08-17T16:23:13+02:00
-draft: true
+draft: false
 ---
 
  

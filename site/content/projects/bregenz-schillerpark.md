@@ -1,7 +1,7 @@
 ---
 title: "Bregenz Schillerpark"
 date: 2017-08-17T16:24:52+02:00
-draft: true
+draft: false
 ---
 
 Ein ehemaliges Café - heute ein auf das Wesentliche reduziertes Wohnloft. 
