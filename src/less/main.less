@@ -1,10 +1,11 @@
 
-@import "./variables";
-@import "lib/mixins/fontface";
-@import "src/fonts";
+// @import "../../semantic/src/site/globals/site.variables";
+// @import "../../semantic/src/site/globals/site.overrides";
+// @import "lib/mixins/fontface";
+// @import "src/fonts";
 
-@import "./overrides";
-@import "./layout";
+// @import "./overrides";
+// @import "./layout";
 
 html {
   width: 100%;
@@ -15,8 +16,6 @@ body {
   height: 100%;
   margin: 0;
   padding: 0;
-  background: #000000;
-  color: @text-color;
   overflow-x: auto !important;
 }
 
@@ -29,26 +28,6 @@ body {
   overflow: auto;  
 }
 #scoll-content {}
-
-
-#indicators {
-  position: fixed;
-  top: 1.5rem;
-  left: 1.5rem;
-}
-
-#rotate-indicator {
-  position: absolute;
-  background-image: url("/indicators/rotate.svg");
-  width: 3rem;
-  height: 3rem;
-  opacity: 0.32;
-  transition: opacity 0.2s;
-
-  &.active {
-    opacity: 1;    
-  }
-}
 
 #three {
   position: fixed;

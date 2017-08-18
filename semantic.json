@@ -23,9 +23,12 @@
     "site",
     "button",
     "container",
+    "grid",
     "icon",
+    "menu",
+    "reset",
     "segment",
-    "grid"
+    "sidebar"
   ],
   "version": "2.2.11"
 }
