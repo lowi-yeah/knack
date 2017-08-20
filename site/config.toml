@@ -14,7 +14,7 @@ paginate = 10
 [params]
   # To provide some metadata for search engines feel free to add a few
   # information about you and your website.
-  name = "Studio Knack"
+  name = "KNACK"
   description = "Describe your website"
 
   # Format dates with Go's time formatting
@@ -29,7 +29,7 @@ paginate = 10
 
   [params.sidebar]
     # Use Markdown to format the string. This works nearly all over the theme
-    bio = "studio<br />**KNACK**"
+    bio = "studio<br />****"
     # The icons will be shown if you enter your username
     twitter = "spf13"
     github = "spf13"
@@ -132,15 +132,25 @@ paginate = 10
       message = "Message"
       submit = "Send message"
 
-  [params.sky]
-    hide  = false
-
+  [params.three]
+    enabled = true
+    [params.three.enable]
+      gui       = false
+      controls  = false
+      sky       = true
+      birds     = true
+    [params.three.camera]
+      radius= 800
+      fov= 50
+    [params.three.particles]
+      exponent = 4
+      bounds = 800
 
 # Menu links that appear on the left sidebar
 [[menu.main]]
   name = "Home"
   url  = "/"
-  weight = 10
+  weight = 1
 
 [[menu.main]]
   name = "About"

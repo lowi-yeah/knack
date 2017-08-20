@@ -265,7 +265,6 @@ let bird = {
         "totalDiffuseLight += directionalLights[ i ].color * dirDiffuseWeight;",
         "float dirSpecularWeight =  max( pow( dirDotNormalHalf, shininess ), 0.0 );",
         "totalSpecularLight += directionalLights[ i ].color * specular * dirSpecularWeight * dirDiffuseWeight;",
-        // "totalSpecularLight += 1.0;",
       "}",
 
     "#endif",
@@ -298,7 +297,7 @@ let bird = {
     // "#endif",
 
     // 'outgoingLight += vec3( 1.0, 1.0, 1.0 ) * ( totalDiffuseLight + totalSpecularLight );',
-    'outgoingLight += diffuse * ( totalDiffuseLight + totalSpecularLight );',
+    'outgoingLight += diffuse * ( totalDiffuseLight + totalSpecularLight + ambientLightColor );',
     'gl_FragColor = vec4( outgoingLight, 1.0 );',
     ShaderChunk[ 'fog_fragment' ], 
 

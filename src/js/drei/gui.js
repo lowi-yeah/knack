@@ -10,10 +10,7 @@ function _data(items) {
     r[k] = v[DEFAULT]
     return r }, {})}
 
-let makeGui = function(config) {
-
-    let useGui = true
-
+let makeGui = function(config, useGui) {
     let dataObjects = {},
         gui
 

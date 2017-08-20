@@ -1,9 +1,4 @@
 
-// @import "../../semantic/src/site/globals/site.variables";
-// @import "../../semantic/src/site/globals/site.overrides";
-// @import "lib/mixins/fontface";
-// @import "src/fonts";
-
 // @import "./overrides";
 // @import "./layout";
 
@@ -29,6 +24,11 @@ body {
 }
 #scoll-content {}
 
+#three-config {
+  display: none;
+  height: 0;
+}
+
 #three {
   position: fixed;
   top: 0;
@@ -37,5 +37,35 @@ body {
   height: 100vh;
   overflow: hidden;
   // transition: opacity 2s;
-  opacity: 0;
+  // opacity: 0;
+}
+
+#invert {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 50vw;
+  height: 100vh;
+  overflow: hidden;
+  background: #000000;
+  mix-blend-mode: overlay;
+}
+
+.screen {
+  width: 100vw;
+  height: 100vh;
+}
+
+#studio-button {
+  transform: rotateZ(90deg);
+  position: absolute;
+  display: inline-block;
+  right: -1em;
+}
+
+#projects-button {
+  position: absolute;
+  display: inline-block;
+  bottom: 1em;
+  left: 50%;
 }

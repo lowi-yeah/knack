@@ -46,8 +46,8 @@ gulp.task('server', ['hugo', 'semantic-ui', 'webpack'], () => {
 
   gulp.watch('./src/js/**/*', ['webpack'])
   gulp.watch(['./src/less/**/*'], ['webpack'])
-  gulp.watch('./src/lib/semantic/src/**/*.{less,overrides,variables,config}', ['semantic-css'])
-  gulp.watch('./src/lib/semantic/src/**/*.js', ['semantic-js'])
+  gulp.watch('./semantic/src/**/*.{less,overrides,variables,config}', ['semantic-css'])
+  gulp.watch('./semantic/src/**/*.js', ['semantic-js'])
   gulp.watch('semantic-json', ['semantic-js', 'semantic-css'])
   
   gulp.watch('./site/**/*', ['hugo'])
