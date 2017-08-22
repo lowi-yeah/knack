@@ -80,21 +80,11 @@ function _initThree() {
                             .exponent(4)
                             .domain([0, window.innerHeight])
                             .range([0, 1])
-                            .clamp(true),
-              leftScale = scalePow()
-                            .domain([0, canvasWidth])
-                            .range([0, 1])
                             .clamp(true)
-        
-          document.addEventListener('ps-scroll-x', function (ev) { 
-            _.defer(() => {
-              let left = parseInt($('.ps__scrollbar-x-rail').css('left').replace(/px/, ''))
-              updateFn({ left: leftScale(left) })})})
-
-          document.addEventListener('ps-scroll-y', function (ev) { 
-            _.defer(() => {
-              let top = parseInt($('.ps__scrollbar-y-rail').css('top').replace(/px/, ''))
-              updateFn({ top: topScale(top) })})})
+          
+          window.onscroll = _.throttle((ev) => {
+                                let top = $(window).scrollTop()
+                                updateFn({ top: topScale(top) })}, 100)
         })}})}
 
 document.addEventListener('DOMContentLoaded', event => { 
