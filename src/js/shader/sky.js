@@ -210,8 +210,9 @@ Sky.SkyShader = {
   ' vec3 L0 = vec3( 0.1 ) * Fex;',
 
   // solar disc
-  // ' float sundisk = smoothstep( sunAngularDiameterCos, sunAngularDiameterCos + 0.00002, cosTheta );',
+  ' float sundisk = smoothstep( sunAngularDiameterCos, sunAngularDiameterCos + 0.00002, cosTheta );',
   // ' L0 += ( vSunE * 19000.0 * Fex ) * sundisk;',
+  ' L0 += ( vSunE * 1000.0 * Fex ) * sundisk;',
 
   // composition
   ' vec3 texColor = ( Lin + L0 ) * 0.04 + vec3( 0.0, 0.0003, 0.00075 );',

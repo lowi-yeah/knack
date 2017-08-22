@@ -46,6 +46,11 @@ paginate = 10
       "Demo Images: [Unsplash](//unsplash.com/)"
     ]
 
+  [params.news]
+    hide  = false
+    title = "News"
+    count = 3
+
   [params.about]
     hide  = false
     title = "Ipsum lorem dolor aliquam ante commodo magna sed accumsan arcu neque."
@@ -143,7 +148,7 @@ paginate = 10
       radius= 800
       fov= 50
     [params.three.particles]
-      exponent = 4
+      exponent = 3
       bounds = 800
 
 # Menu links that appear on the left sidebar

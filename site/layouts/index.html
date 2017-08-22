@@ -1,8 +1,7 @@
 {{ define "main" }}
-  {{ if not .Site.Params.about.hide }}
-    {{ partial "about" . }}
+  {{ if not .Site.Params.news.hide }}
+    {{ partial "news" . }}
   {{ end }}
-
 
   {{ if not .Site.Params.portfolio.hide }}
     {{ partial "portfolio" . }}

@@ -90,7 +90,8 @@ let defaultConfig  = {particles:  { exponent: 3,
                                     mieCoefficient:   [0.02, 0, 0.1, 0.001],
                                     mieDirectionalG:  [0.8, 0, 1, 0.001],
                                     luminance:        [1, 0, 2, 0.001],
-                                    inclination:      [0.50, 0.2, 0.515, 0.0001],   // elevation / inclination
+                                    // 0.5127441406250001 is where ths sun disk appears for the first time
+                                    inclination:      [0.5127, 0.2, 0.515, 0.0001],   // elevation / inclination
                                     azimuth:          [0.25, 0, 1, 0.0001, false],  // Facing front,
                                     distance:         [2000, false],
                                     sun:              [true, false] },
@@ -220,7 +221,6 @@ function _intitBirds(computeTextureSize) {
   return {shader, mesh} }
 
 function _updateSky(state, skyShader, sun) {
-
   let theta = Math.PI * ( state.sky.inclination - 0.5 ),
       phi   = 2 * Math.PI * ( state.sky.azimuth - 0.5 )
   
@@ -238,7 +238,8 @@ function _updateSky(state, skyShader, sun) {
 
   state.camera.hasChanged = true
   state.camera.spherical.phi = phi
-  state.camera.spherical.theta = theta }
+  state.camera.spherical.theta = theta 
+}
 
 function _updateBirdConfig(state, velocityUniforms) {
   velocityUniforms.seperationDistance.value = state.birds.seperation
@@ -473,7 +474,9 @@ function drei(domId, customConfig) {
           bird.shader.uniforms.texturePosition.value = gpuCompute.getCurrentRenderTarget( positionVariable ).texture
           bird.shader.uniforms.textureVelocity.value = gpuCompute.getCurrentRenderTarget( velocityVariable ).texture }
         
-        composition.render(δ)}
+        composition.render(δ)
+
+      }
       
       // composition.render(0)
       _render() 
@@ -502,15 +505,25 @@ function drei(domId, customConfig) {
                                 .clamp(true)
   
       function update({top, left}) {
-        if(top) {
+        if(!_.isNil(top)) {
           state.sky.inclination = sunΣ(top)
           state.sky.rayleigh = rayleighΣ(top)
           state.sky.mieCoefficient = mieCoefficientΣ(top)
           state.sky.mieDirectionalG = mieDirectionalGΣ(top)
-          _updateSky(state, skyShader, sunLight) }
-        if(left) {
+          _updateSky(state, skyShader, sunLight)
+          // camera.updateProjectionMatrix() 
+        }
+
+        if(!_.isNil(left)) {
           camera.rotation.y = -2 * Math.PI * left
-          camera.updateProjectionMatrix() }
+          camera.updateProjectionMatrix() 
+          
+          // state.sky.inclination = sunΣ(left)
+          // state.sky.rayleigh = rayleighΣ(left)
+          // state.sky.mieCoefficient = mieCoefficientΣ(left)
+          // state.sky.mieDirectionalG = mieDirectionalGΣ(left)
+          // _updateSky(state, skyShader, sunLight)
+        }
       }
       return update }
       // )} // font loader is disabled. and so is its promise
