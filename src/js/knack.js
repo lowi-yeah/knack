@@ -67,6 +67,7 @@ import {BloomPass,
 import {scaleLinear}          from 'd3-scale'
 
 import fontLoader             from './lib/font-loader'
+import objLoader              from './lib/obj-loader'
 import ShaderExtras           from './lib/shader-extras'
 import OrbitControls          from './lib/orbit-controls'
 import TextSprite             from './lib/text-sprite'
@@ -91,7 +92,8 @@ let defaultConfig  = {particles:  { exponent: 3,
                                     mieDirectionalG:  [0.8, 0, 1, 0.001],
                                     luminance:        [1, 0, 2, 0.001],
                                     // 0.5127441406250001 is where ths sun disk appears for the first time
-                                    inclination:      [0.5127, 0.2, 0.515, 0.0001],   // elevation / inclination
+                                    // inclination:      [0.5127, 0.2, 0.515, 0.0001],   // elevation / inclination
+                                    inclination:      [0.47, 0.2, 0.515, 0.0001],   // elevation / inclination
                                     azimuth:          [0.25, 0, 1, 0.0001, false],  // Facing front,
                                     distance:         [2000, false],
                                     sun:              [true, false] },
@@ -129,8 +131,6 @@ function _sphericalToCartesian(spherical) {
   return new Vector3(x, y, z) }
 
 function _fillPositionTexture( texture, bounds ) {
-
-  console.log('bounds', bounds)
 
   function _random() {
     let o = (Math.random() < 0.5) ? 0 : bounds,
@@ -274,7 +274,7 @@ function drei(domId, customConfig) {
           
       scene.fog = new Fog( 0xffffff, config.camera.radius * 1.1, config.camera.radius * 2 )
       camera.position.set(0, 0, config.camera.radius)
-      // scene.add(ambientLight)
+      scene.add(ambientLight)
       // scene.add( helper )
     
       // Renderer
@@ -316,7 +316,33 @@ function drei(domId, customConfig) {
                                   config.particles.bounds),
           bird                = _intitBirds(computeTextureSize)
       if(config.enable.birds) scene.add(bird.mesh)
-      
+
+      // Bunny
+      // ————————————————————————————
+      let manager     = new LoadingManager(),
+          onProgress  = function ( xhr ) {
+                          if ( xhr.lengthComputable ) {
+                            let percentComplete = xhr.loaded / xhr.total * 100
+                            console.log( Math.round(percentComplete, 2) + '% downloaded' )}},
+          onError     = function ( xhr ) { console.log('error', xhr) },
+          loader      = new objLoader( manager ),
+          scale       = 1024
+
+      manager.onProgress = function ( item, loaded, total ) { console.log( item, loaded, total ) }
+
+      loader.load( 'obj/bunny.obj', function ( bunny ) {
+        console.log('bunny', bunny)
+        // bunny.position.y = -100
+        // bunny.position.z = 400
+        bunny.scale.set( scale, scale, scale )
+        // bunny.position.set( 0 )
+        scene.add( bunny )
+
+        let bbox = new Box3().setFromObject(bunny)
+        console.log('bbox', bbox)
+
+      }, onProgress, onError )
+
       // Event handlers
       // ————————————————————————————————
       document.addEventListener( 'mousemove', (event) => {

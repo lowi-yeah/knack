@@ -1,0 +1,12 @@
+
+{{ "<!-- Scripts -->" | safeHTML }}
+<script src="{{ .Site.BaseURL }}js/jquery.min.js"></script>
+<script src="{{ .Site.BaseURL }}semantic/themes/knack/assets/js/svg-morpheus.js"></script>
+<script src="{{ .Site.BaseURL }}semantic/semantic.js"></script>
+<script src="{{ .Site.BaseURL }}app.js"></script>
+
+{{ template "_internal/google_analytics_async.html" . }}
+
+{{ range .Site.Params.custom_js }}
+<script src="{{ $.Site.BaseURL }}{{ . }}"></script>
+{{ end }}

@@ -1,0 +1,15 @@
+{{ with .Site.Menus.main }}
+  <div id="sidebar" class="ui left overlay menu sidebar">
+    <div class="ui middle aligned items">
+      {{ range . }}
+        <div class="item">
+          <div class="content">
+            <a class="ui button" href="{{ .URL | absURL }}">
+              <span class="content">{{ .Name }}</span>
+            </a>
+          </div>
+        </div>
+      {{ end }}  
+    </div>
+  </div>
+{{ end }}

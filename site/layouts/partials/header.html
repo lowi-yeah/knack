@@ -1,0 +1,14 @@
+{{ "<!-- Header -->" | safeHTML }}
+
+<header id="header" class="ui middle aligned center aligned full screen segment">
+  {{ with .Site.Params.name }}
+    <h1 class="ui humongous header">{{ . | markdownify }}</h1>
+  {{ end }}  
+
+  <!-- <button id="studio-button" class="ui button">
+    <span class="content">Studio</span>
+  </button>
+  <button id="projects-button" class="ui button">
+    <span class="content">Projekte</span>
+  </button> -->
+</header>

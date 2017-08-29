@@ -1,0 +1,12 @@
+<section>
+  
+  <!-- <div class="ui container">
+    <button class="ui button">
+       <span class="content">wat!</span>
+  </div> -->
+
+	<header class="major">
+		{{ with .Site.Params.about.title }}<h2>{{ . | markdownify }}</h2>{{ end }}
+	</header>
+	{{ with .Site.Params.about.content }}<p>{{ . | markdownify }}</p>{{ end }}
+</section>

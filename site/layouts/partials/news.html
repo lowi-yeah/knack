@@ -1,0 +1,31 @@
+<div id="news" class="ui fluid container">
+
+ 
+
+  <div class="grid">
+    
+    {{ with .Site.Params.news.title }}
+      <div class="box title">{{ . }}</div>
+    {{ end }}
+
+    {{ range first 5 .Data.Pages }}
+      <div>{{ .Params }}</div>
+    {{ end }}
+
+   <!--  <div class="box a">a</div>
+    <div class="box b">B</div>
+    <div class="box c">C</div>
+    <div class="box d">D</div>
+    <div class="box e">E</div>
+    <div class="box f">F</div>
+    <div class="box g">g</div>
+    <div class="box h">h</div>
+    <div class="box i">i</div>
+    <div class="box j">j</div>
+    <div class="box k">k</div>
+    <div class="box l">l</div>
+    <div class="box m">m</div>
+    <div class="box n">n</div>
+    <div class="box o">o</div> -->
+  </div>
+</div>

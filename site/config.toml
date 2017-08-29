@@ -2,8 +2,7 @@ baseurl = "/"
 languageCode = "en-us"
 title = "_lowi"
 
-theme = "hugo-strata-theme"
-disqusShortname = "spf13"
+# theme = ""
 
 # Enable Google Analytics by inserting your tracking code
 googleAnalytics = ""
@@ -148,10 +147,10 @@ paginate = 10
 #   | | | ' \| '_/ -_) -_) || \__ \
 #   |_| |_||_|_| \___\___|\__/|___/
   [params.three]
-    enabled = true
+    enabled = false
     [params.three.enable]
       gui       = false
-      controls  = false
+      controls  = true
       sky       = true
       birds     = false
     [params.three.camera]
