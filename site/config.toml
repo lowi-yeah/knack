@@ -11,6 +11,11 @@ googleAnalytics = ""
 # Define how many posts should appear on a site
 paginate = 10
 
+[taxonomies]
+  tag = "tags"
+  category = "categories"
+  project = "projects"
+
 [params]
   # To provide some metadata for search engines feel free to add a few
   # information about you and your website.
@@ -18,7 +23,7 @@ paginate = 10
   description = "Describe your website"
 
   # Format dates with Go's time formatting
-  date_format = "01-02-2006"
+  date_format = "01/02/2006"
 
   # Add read time estimates in the format "X min read"
   show_read_time = false
@@ -137,13 +142,18 @@ paginate = 10
       message = "Message"
       submit = "Send message"
 
+
+#  _____ _                   _ ___
+# |_   _| |_  _ _ ___ ___ _ | / __|
+#   | | | ' \| '_/ -_) -_) || \__ \
+#   |_| |_||_|_| \___\___|\__/|___/
   [params.three]
     enabled = true
     [params.three.enable]
       gui       = false
       controls  = false
       sky       = true
-      birds     = true
+      birds     = false
     [params.three.camera]
       radius= 800
       fov= 50
@@ -151,6 +161,10 @@ paginate = 10
       exponent = 3
       bounds = 800
 
+#  __  __
+# |  \/  |___ _ _ _  _
+# | |\/| / -_) ' \ || |
+# |_|  |_\___|_||_\_,_|
 # Menu links that appear on the left sidebar
 [[menu.main]]
   name = "Home"
@@ -166,3 +180,26 @@ paginate = 10
   name = "Projects"
   url  = "projects/"
   weight = 0
+
+#  _
+# | |   __ _ _ _  __ _ _  _ __ _ __ _ ___ ___
+# | |__/ _` | ' \/ _` | || / _` / _` / -_|_-<
+# |____\__,_|_||_\__, |\_,_\__,_\__, \___/__/
+#                |___/          |___/
+[Languages]
+  [Languages.en]
+    title = "My blog"
+    weight = 1
+  [Languages.en.params]
+    linkedin = "english-link"
+
+  [Languages.de]
+    copyright = "Meins meins meins"
+    weight = 2
+  [Languages.de.params]
+    linkedin = "deutsche-verknüpfung"
+  [Languages.de.navigation]
+    help  = "Hilfe"
+
+
+
